@@ -28,6 +28,12 @@ function TeacherListingPage() {
     updateEditingTeacher,
     saveEdit,
     confirmDelete,
+
+    addingTeacher,
+    handleAdd,
+    closeAdd,
+    updateAddingTeacher,
+    saveAdd,
   } = useTeacherListing()
 
   const renderViewDetails = (teacher: Teacher) => (
@@ -97,6 +103,52 @@ function TeacherListingPage() {
     </>
   )
 
+  const renderAddFields = (teacher: Partial<Teacher>) => (
+    <>
+      <FieldRoot>
+        <FieldLabel>Name</FieldLabel>
+        <Input
+          value={teacher.name || ""}
+          onChange={(e) => updateAddingTeacher({ name: e.target.value })}
+          placeholder="Enter name"
+        />
+      </FieldRoot>
+      <FieldRoot>
+        <FieldLabel>Email</FieldLabel>
+        <Input
+          value={teacher.email || ""}
+          onChange={(e) => updateAddingTeacher({ email: e.target.value })}
+          placeholder="Enter email"
+        />
+      </FieldRoot>
+      <FieldRoot>
+        <FieldLabel>Subject</FieldLabel>
+        <Input
+          value={teacher.subject || ""}
+          onChange={(e) => updateAddingTeacher({ subject: e.target.value })}
+          placeholder="Enter subject"
+        />
+      </FieldRoot>
+      <FieldRoot>
+        <FieldLabel>Experience (Years)</FieldLabel>
+        <Input
+          type="number"
+          value={teacher.experience || ""}
+          onChange={(e) => updateAddingTeacher({ experience: parseInt(e.target.value) || 0 })}
+          placeholder="Enter experience"
+        />
+      </FieldRoot>
+      <FieldRoot>
+        <FieldLabel>Join Date</FieldLabel>
+        <Input
+          type="date"
+          value={teacher.joinDate || ""}
+          onChange={(e) => updateAddingTeacher({ joinDate: e.target.value })}
+        />
+      </FieldRoot>
+    </>
+  )
+
   return (
     <ListingPage
       title="Teachers"
@@ -107,16 +159,21 @@ function TeacherListingPage() {
       selectedItem={selectedTeacher}
       editingItem={editingTeacher}
       deletingItem={deletingTeacher}
+      addingItem={addingTeacher}
       onView={handleView}
       onEdit={handleEdit}
       onDelete={handleDelete}
+      onAdd={handleAdd}
       onCloseView={closeView}
       onCloseEdit={closeEdit}
       onCloseDelete={closeDelete}
+      onCloseAdd={closeAdd}
       onSaveEdit={saveEdit}
+      onSaveAdd={saveAdd}
       onConfirmDelete={confirmDelete}
       renderViewDetails={renderViewDetails}
       renderEditFields={renderEditFields}
+      renderAddFields={renderAddFields}
     />
   )
 }

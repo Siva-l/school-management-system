@@ -40,16 +40,21 @@ interface ListingPageProps<T> {
   selectedItem: T | null
   editingItem: T | null
   deletingItem: T | null
+  addingItem?: Partial<T> | null
   onView: (item: T) => void
   onEdit: (item: T) => void
   onDelete: (item: T) => void
+  onAdd?: () => void
   onCloseView: () => void
   onCloseEdit: () => void
   onCloseDelete: () => void
+  onCloseAdd?: () => void
   onSaveEdit: () => void
+  onSaveAdd?: () => void
   onConfirmDelete: () => void
   renderViewDetails: (item: T) => ReactNode
   renderEditFields: (item: T) => ReactNode
+  renderAddFields?: (item: Partial<T>) => ReactNode
 }
 
 export function ListingPage<T extends { id: number | string }>({
@@ -61,16 +66,21 @@ export function ListingPage<T extends { id: number | string }>({
   selectedItem,
   editingItem,
   deletingItem,
+  addingItem,
   onView,
   onEdit,
   onDelete,
+  onAdd,
   onCloseView,
   onCloseEdit,
   onCloseDelete,
+  onCloseAdd,
   onSaveEdit,
+  onSaveAdd,
   onConfirmDelete,
   renderViewDetails,
   renderEditFields,
+  renderAddFields,
 }: ListingPageProps<T>) {
   return (
     <Box p={8} minH="100vh">
@@ -81,7 +91,7 @@ export function ListingPage<T extends { id: number | string }>({
             <Text color="gray.600">{description}</Text>
           </Box>
 
-          <AppButton bg={"blue.500"} size="md" color="white">
+          <AppButton bg={"blue.500"} size="md" color="white" onClick={onAdd}>
             <FiPlus style={{ marginRight: "8px" }} /> {addButtonText}
           </AppButton>
         </Flex>
@@ -231,6 +241,40 @@ export function ListingPage<T extends { id: number | string }>({
               </AppButton>
               <DialogActionTrigger asChild>
                 <AppButton variant="subtle" colorPalette="gray" flex="1">
+                  Cancel
+                </AppButton>
+              </DialogActionTrigger>
+            </DialogFooter>
+          </DialogContent>
+        </DialogPositioner>
+      </DialogRoot>
+
+
+      <DialogRoot open={!!addingItem} onOpenChange={(e) => !e.open && onCloseAdd?.()}>
+        <DialogBackdrop />
+        <DialogPositioner>
+          <DialogContent>
+            <DialogCloseTrigger asChild position="absolute" top="2" right="2">
+              <IconButton variant="ghost" size="sm" aria-label="Close">
+                <FiX />
+              </IconButton>
+            </DialogCloseTrigger>
+            <DialogHeader>
+              <DialogTitle>Add New {title.slice(0, -1)}</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
+              {addingItem && renderAddFields && (
+                <Stack gap={4}>
+                  {renderAddFields(addingItem)}
+                </Stack>
+              )}
+            </DialogBody>
+            <DialogFooter gap={3}>
+              <AppButton bg="blue.600" color="white" flex="1" onClick={onSaveAdd} _hover={{ bg: "blue.700" }}>
+                Create
+              </AppButton>
+              <DialogActionTrigger asChild>
+                <AppButton variant="subtle" colorPalette="gray" flex="1" onClick={onCloseAdd}>
                   Cancel
                 </AppButton>
               </DialogActionTrigger>

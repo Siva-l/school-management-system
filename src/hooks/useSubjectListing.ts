@@ -44,14 +44,23 @@ export const useSubjectListing = () => {
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null)
   const [deletingSubject, setDeletingSubject] = useState<Subject | null>(null)
+  const [addingSubject, setAddingSubject] = useState<Partial<Subject> | null>(null)
 
   const handleView = (subject: Subject) => setSelectedSubject(subject)
   const handleEdit = (subject: Subject) => setEditingSubject(subject)
   const handleDelete = (subject: Subject) => setDeletingSubject(subject)
+  const handleAdd = () => setAddingSubject({
+    name: "",
+    code: "",
+    description: "",
+    credits: 0,
+    department: ""
+  })
 
   const closeView = () => setSelectedSubject(null)
   const closeEdit = () => setEditingSubject(null)
   const closeDelete = () => setDeletingSubject(null)
+  const closeAdd = () => setAddingSubject(null)
 
   const updateEditingSubject = (updates: Partial<Subject>) => {
     if (editingSubject) {
@@ -75,6 +84,27 @@ export const useSubjectListing = () => {
     }
   }
 
+  const updateAddingSubject = (updates: Partial<Subject>) => {
+    if (addingSubject) {
+      setAddingSubject({ ...addingSubject, ...updates })
+    }
+  }
+
+  const saveAdd = () => {
+    if (addingSubject && addingSubject.name) {
+      const newSubject: Subject = {
+        id: Math.max(...subjects.map(s => s.id), 0) + 1,
+        name: addingSubject.name || "",
+        code: addingSubject.code || "",
+        description: addingSubject.description || "",
+        credits: addingSubject.credits || 0,
+        department: addingSubject.department || "",
+      }
+      setSubjects([...subjects, newSubject])
+      closeAdd()
+    }
+  }
+
   return {
     subjects,
     selectedSubject,
@@ -89,5 +119,11 @@ export const useSubjectListing = () => {
     updateEditingSubject,
     saveEdit,
     confirmDelete,
+
+    addingSubject,
+    handleAdd,
+    closeAdd,
+    updateAddingSubject,
+    saveAdd,
   }
 }

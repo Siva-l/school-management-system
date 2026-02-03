@@ -28,6 +28,12 @@ function SubjectListingPage() {
     updateEditingSubject,
     saveEdit,
     confirmDelete,
+
+    addingSubject,
+    handleAdd,
+    closeAdd,
+    updateAddingSubject,
+    saveAdd,
   } = useSubjectListing()
 
   const renderViewDetails = (subject: Subject) => (
@@ -89,6 +95,52 @@ function SubjectListingPage() {
     </>
   )
 
+  const renderAddFields = (subject: Partial<Subject>) => (
+    <>
+      <FieldRoot>
+        <FieldLabel>Subject Name</FieldLabel>
+        <Input
+          value={subject.name || ""}
+          onChange={(e) => updateAddingSubject({ name: e.target.value })}
+          placeholder="Enter subject name"
+        />
+      </FieldRoot>
+      <FieldRoot>
+        <FieldLabel>Code</FieldLabel>
+        <Input
+          value={subject.code || ""}
+          onChange={(e) => updateAddingSubject({ code: e.target.value })}
+          placeholder="Enter subject code"
+        />
+      </FieldRoot>
+         <FieldRoot>
+        <FieldLabel>Description</FieldLabel>
+        <Input
+          value={subject.description || ""}
+          onChange={(e) => updateAddingSubject({ description: e.target.value })}
+          placeholder="Enter description"
+        />
+      </FieldRoot>
+           <FieldRoot>
+        <FieldLabel>Credits</FieldLabel>
+        <Input
+          type="number"
+          value={subject.credits || ""}
+          onChange={(e) => updateAddingSubject({ credits: parseInt(e.target.value) || 0 })}
+          placeholder="Enter credits"
+        />
+      </FieldRoot>
+      <FieldRoot>
+        <FieldLabel>Department</FieldLabel>
+        <Input
+          value={subject.department || ""}
+          onChange={(e) => updateAddingSubject({ department: e.target.value })}
+          placeholder="Enter department"
+        />
+      </FieldRoot>
+    </>
+  )
+
   return (
     <ListingPage
       title="Subjects"
@@ -99,16 +151,21 @@ function SubjectListingPage() {
       selectedItem={selectedSubject}
       editingItem={editingSubject}
       deletingItem={deletingSubject}
+      addingItem={addingSubject}
       onView={handleView}
       onEdit={handleEdit}
       onDelete={handleDelete}
+      onAdd={handleAdd}
       onCloseView={closeView}
       onCloseEdit={closeEdit}
       onCloseDelete={closeDelete}
+      onCloseAdd={closeAdd}
       onSaveEdit={saveEdit}
+      onSaveAdd={saveAdd}
       onConfirmDelete={confirmDelete}
       renderViewDetails={renderViewDetails}
       renderEditFields={renderEditFields}
+      renderAddFields={renderAddFields}
     />
   )
 }

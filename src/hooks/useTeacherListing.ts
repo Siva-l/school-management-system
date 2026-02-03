@@ -41,14 +41,23 @@ export const useTeacherListing = () => {
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null)
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null)
   const [deletingTeacher, setDeletingTeacher] = useState<Teacher | null>(null)
+  const [addingTeacher, setAddingTeacher] = useState<Partial<Teacher> | null>(null)
 
   const handleView = (teacher: Teacher) => setSelectedTeacher(teacher)
   const handleEdit = (teacher: Teacher) => setEditingTeacher(teacher)
   const handleDelete = (teacher: Teacher) => setDeletingTeacher(teacher)
+  const handleAdd = () => setAddingTeacher({
+    name: "",
+    email: "",
+    subject: "",
+    experience: 0,
+    joinDate: new Date().toISOString().split("T")[0]
+  })
 
   const closeView = () => setSelectedTeacher(null)
   const closeEdit = () => setEditingTeacher(null)
   const closeDelete = () => setDeletingTeacher(null)
+  const closeAdd = () => setAddingTeacher(null)
 
   const updateEditingTeacher = (updates: Partial<Teacher>) => {
     if (editingTeacher) {
@@ -72,6 +81,27 @@ export const useTeacherListing = () => {
     }
   }
 
+  const updateAddingTeacher = (updates: Partial<Teacher>) => {
+    if (addingTeacher) {
+      setAddingTeacher({ ...addingTeacher, ...updates })
+    }
+  }
+
+  const saveAdd = () => {
+    if (addingTeacher && addingTeacher.name) {
+      const newTeacher: Teacher = {
+        id: Math.max(...teachers.map(t => t.id), 0) + 1,
+        name: addingTeacher.name || "",
+        email: addingTeacher.email || "",
+        subject: addingTeacher.subject || "",
+        experience: addingTeacher.experience || 0,
+        joinDate: addingTeacher.joinDate || new Date().toISOString().split("T")[0],
+      }
+      setTeachers([...teachers, newTeacher])
+      closeAdd()
+    }
+  }
+
   return {
     teachers,
     selectedTeacher,
@@ -86,5 +116,11 @@ export const useTeacherListing = () => {
     updateEditingTeacher,
     saveEdit,
     confirmDelete,
+
+    addingTeacher,
+    handleAdd,
+    closeAdd,
+    updateAddingTeacher,
+    saveAdd,
   }
 }
