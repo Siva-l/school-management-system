@@ -1,22 +1,19 @@
-import apiClient from './apiClient';
-import type { ApiResponse, Student } from './types';
+import apiClient from '../api/apiClient';
+import type { ApiResponse, Student, CreateStudentInput } from '../api/types';
 
 const sanitizeStudentPayload = (studentData: Partial<Student>) => {
   const { 
     id, 
     createdAt, 
     updatedAt, 
-    studentEnrollments, 
-    enrollmentDate, 
-    grade, 
     ...sanitized 
   } = studentData;
   return sanitized;
 };
 
 export const studentService = {
-  getAllStudents: async (): Promise<ApiResponse<Student[]>> => {
-    const response = await apiClient.get<ApiResponse<Student[]>>('/students');
+  getAllStudents: async (page: number, size: number): Promise<ApiResponse<Student[]>> => {
+    const response = await apiClient.get<ApiResponse<Student[]>>(`/students?page=${page}&size=${size}`);
     return response.data;
   },
 
@@ -27,9 +24,8 @@ export const studentService = {
   },
 
  
-  createStudent: async (studentData: Partial<Student>): Promise<ApiResponse<Student>> => {
-    const payload = sanitizeStudentPayload(studentData);
-    const response = await apiClient.post<ApiResponse<Student>>('/students/create', payload);
+  createStudent: async (studentData: CreateStudentInput): Promise<ApiResponse<Student>> => {
+    const response = await apiClient.post<ApiResponse<Student>>('/students/create', studentData);
     return response.data;
   },
 

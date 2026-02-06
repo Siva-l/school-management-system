@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
-import { studentService } from "../api/studentService"
-import type { Student } from "../api/types"
+import { studentService } from "../service/studentService"
+import type { Student, CreateStudentInput } from "../api/types"
+import { showErrorToast, showSuccessToast } from "../util/toast.util"
 
 export type { Student } from "../api/types"
 
@@ -9,37 +10,44 @@ export const useStudentListing = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
+  const [pageSize] = useState(3)
+  
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null)
-  const [addingStudent, setAddingStudent] = useState<Partial<Student> | null>(null)
+  const [addingStudent, setAddingStudent] = useState<CreateStudentInput | null>(null)
 
-  const fetchStudents = useCallback(async () => {
+  const fetchStudents = useCallback(async (page: number = currentPage) => {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await studentService.getAllStudents()
+      const response = await studentService.getAllStudents(page, pageSize)
       if (response.success) {
-        const mappedStudents = response.data.map(student => ({
+        const mappedStudents = response?.data && response.data.results.map(student => ({
           ...student,
-          enrollmentDate: student.createdAt ? student.createdAt.split('T')[0] : "",
-          grade: student.studentEnrollments?.[0]?.division?.class?.grade || "N/A"
         }))
         setStudents(mappedStudents)
+        setTotalPages(response.data.totalPages)
+        setTotalCount(response.data.totalCount)
+        setCurrentPage(page)
       } else {
         setError("Failed to fetch students")
       }
     } catch (err) {
       setError("An error occurred while fetching students")
-      console.error(err)
+      showErrorToast("Error", "An error occurred while fetching students")
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [currentPage, pageSize])
 
   useEffect(() => {
     fetchStudents()
-  }, [fetchStudents])
+  }, [])
 
   const handleView = (student: Student) => setSelectedStudent(student)
   const handleEdit = (student: Student) => setEditingStudent(student)
@@ -47,9 +55,9 @@ export const useStudentListing = () => {
   const handleAdd = () => setAddingStudent({
     name: "",
     admissionNo: "",
-    grade: "",
     dob: "",
-    enrollmentDate:""
+    gender: "",
+    phone: "",
   })
 
   const closeView = () => setSelectedStudent(null)
@@ -57,24 +65,23 @@ export const useStudentListing = () => {
   const closeDelete = () => setDeletingStudent(null)
   const closeAdd = () => setAddingStudent(null)
 
-  const updateEditingStudent = (updates: Partial<Student>) => {
-    if (editingStudent) {
-      setEditingStudent({ ...editingStudent, ...updates })
-    }
-  }
 
-  const saveEdit = async () => {
+
+  const saveEdit = async (data: Student) => {
     if (editingStudent && editingStudent.id) {
       setIsLoading(true)
       try {
-        console.log("Editing student:", editingStudent)
-        const response = await studentService.updateStudent(editingStudent.id, editingStudent)
+        const response = await studentService.updateStudent(editingStudent.id, data)
         if (response.success) {
+
           await fetchStudents()
           closeEdit()
+          showSuccessToast("Success", "Student updated successfully")
+        } else {
+          showErrorToast("Error", "Failed to update student")
         }
       } catch (err) {
-        console.error("Failed to update student", err)
+        showErrorToast("Error", "Failed to update student")
       } finally {
         setIsLoading(false)
       }
@@ -87,37 +94,48 @@ export const useStudentListing = () => {
       try {
         const response = await studentService.deleteStudent(deletingStudent.id)
         if (response.success) {
-          await fetchStudents()
+          const isLastItemOnPage = students.length === 1;
+          const newPage = (isLastItemOnPage && currentPage > 1) ? currentPage - 1 : currentPage;
+
+          await fetchStudents(newPage)
           closeDelete()
+          showSuccessToast("Success", "Student deleted successfully")
+        } else {
+          showErrorToast("Error", "Failed to delete student")
         }
       } catch (err) {
-        console.error("Failed to delete student", err)
+        showErrorToast("Error", "Failed to delete student")
       } finally {
         setIsLoading(false)
       }
     }
   }
 
-  const updateAddingStudent = (updates: Partial<Student>) => {
-    if (addingStudent) {
-      setAddingStudent({ ...addingStudent, ...updates })
-    }
-  }
 
-  const saveAdd = async () => {
-    if (addingStudent && addingStudent.name) {
+
+  const saveAdd = async (data: CreateStudentInput) => {
+    if (addingStudent) {
       setIsLoading(true)
       try {
-        const response = await studentService.createStudent(addingStudent)
+        const response = await studentService.createStudent(data)
         if (response.success) {
           await fetchStudents()
           closeAdd()
+          showSuccessToast("Success", "Student added successfully")
+        } else {
+          showErrorToast("Error", "Failed to add student")
         }
       } catch (err) {
-        console.error("Failed to add student", err)
+        showErrorToast("Error", "Failed to add student")
       } finally {
         setIsLoading(false)
       }
+    }
+  }
+
+  const handlePageChange = (page?: number) => {
+    if (page) {
+      fetchStudents(page)
     }
   }
 
@@ -134,15 +152,20 @@ export const useStudentListing = () => {
     closeView,
     closeEdit,
     closeDelete,
-    updateEditingStudent,
     saveEdit,
     confirmDelete,
 
     addingStudent,
     handleAdd,
     closeAdd,
-    updateAddingStudent,
     saveAdd,
     refreshStudents: fetchStudents,
+    
+    // Pagination
+    currentPage,
+    totalPages,
+    totalCount,
+    pageSize,
+    handlePageChange,
   }
 }

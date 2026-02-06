@@ -1,50 +1,50 @@
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { subjectService } from "../service/subjectService" 
+import type { Subject, CreateSubjectInput } from "../api/types" 
+import { showErrorToast, showSuccessToast } from "../util/toast.util"
 
-export interface Subject {
-  id: number
-  name: string
-  code: string
-  description: string
-  credits: number
-  department: string
-}
-
-const initialSubjects: Subject[] = [
-  {
-    id: 1,
-    name: "Advanced Mathematics",
-    code: "MATH301",
-    description:"Calculus and Advanced Algebra",
-    credits: 4,
-    department: "Mathematics",
- 
-  },
-  {
-    id: 2,
-    name: "Classical Physics",
-    code: "PHYS201",
-    description:"Mechanics and Thermodynamics",
-    credits: 4,
-    department: "Science",
-    
-  },
-  {
-    id: 3,
-    name: "World Literature",
-    code: "ENG401",
-    description:"Classic and Contemporary Literature",
-    credits: 3,
-    department: "English",
-    
-  },
-]
+export type { Subject } from "../api/types"
 
 export const useSubjectListing = () => {
-  const [subjects, setSubjects] = useState<Subject[]>(initialSubjects)
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
+  const [pageSize] = useState(3)
+  
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null)
   const [deletingSubject, setDeletingSubject] = useState<Subject | null>(null)
-  const [addingSubject, setAddingSubject] = useState<Partial<Subject> | null>(null)
+  const [addingSubject, setAddingSubject] = useState<CreateSubjectInput | null>(null)
+
+  const fetchSubjects = useCallback(async (page: number = currentPage) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await subjectService.getAllSubjects(page, pageSize)
+      if (response.success) {
+        setSubjects(response.data.results)
+        setTotalPages(response.data.totalPages)
+        setTotalCount(response.data.totalCount)
+        setCurrentPage(page)
+      } else {
+        setError("Failed to fetch subjects")
+      }
+    } catch (err) {
+      setError("An error occurred while fetching subjects")
+      showErrorToast("Error", "An error occurred while fetching subjects")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [currentPage, pageSize])
+
+  useEffect(() => {
+    fetchSubjects()
+  }, [])
 
   const handleView = (subject: Subject) => setSelectedSubject(subject)
   const handleEdit = (subject: Subject) => setEditingSubject(subject)
@@ -52,9 +52,6 @@ export const useSubjectListing = () => {
   const handleAdd = () => setAddingSubject({
     name: "",
     code: "",
-    description: "",
-    credits: 0,
-    department: ""
   })
 
   const closeView = () => setSelectedSubject(null)
@@ -62,51 +59,82 @@ export const useSubjectListing = () => {
   const closeDelete = () => setDeletingSubject(null)
   const closeAdd = () => setAddingSubject(null)
 
-  const updateEditingSubject = (updates: Partial<Subject>) => {
-    if (editingSubject) {
-      setEditingSubject({ ...editingSubject, ...updates })
-    }
-  }
 
-  const saveEdit = () => {
-    if (editingSubject) {
-      setSubjects((prev) =>
-        prev.map((s) => (s.id === editingSubject.id ? editingSubject : s))
-      )
-      closeEdit()
-    }
-  }
 
-  const confirmDelete = () => {
-    if (deletingSubject) {
-      setSubjects((prev) => prev.filter((s) => s.id !== deletingSubject.id))
-      closeDelete()
-    }
-  }
-
-  const updateAddingSubject = (updates: Partial<Subject>) => {
-    if (addingSubject) {
-      setAddingSubject({ ...addingSubject, ...updates })
-    }
-  }
-
-  const saveAdd = () => {
-    if (addingSubject && addingSubject.name) {
-      const newSubject: Subject = {
-        id: Math.max(...subjects.map(s => s.id), 0) + 1,
-        name: addingSubject.name || "",
-        code: addingSubject.code || "",
-        description: addingSubject.description || "",
-        credits: addingSubject.credits || 0,
-        department: addingSubject.department || "",
+  const saveEdit = async (data: Subject) => {
+    if (editingSubject && editingSubject.id) {
+      setIsLoading(true)
+      try {
+        const response = await subjectService.updateSubject(editingSubject.id, data)
+        if (response.success) {
+          await fetchSubjects()
+          closeEdit()
+          showSuccessToast("Success", "Subject updated successfully")
+        } else {
+          showErrorToast("Error", "Failed to update subject")
+        }
+      } catch (err) {
+        showErrorToast("Error", "Failed to update subject")
+      } finally {
+        setIsLoading(false)
       }
-      setSubjects([...subjects, newSubject])
-      closeAdd()
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (deletingSubject && deletingSubject.id) {
+      setIsLoading(true)
+      try {
+        const response = await subjectService.deleteSubject(deletingSubject.id)
+        if (response.success) {
+          const isLastItemOnPage = subjects.length === 1;
+          const newPage = (isLastItemOnPage && currentPage > 1) ? currentPage - 1 : currentPage;
+          await fetchSubjects(newPage)
+          closeDelete()
+          showSuccessToast("Success", "Subject deleted successfully")
+        } else {
+          showErrorToast("Error", "Failed to delete subject")
+        }
+      } catch (err) {
+        showErrorToast("Error", "Failed to delete subject")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+  }
+
+
+
+  const saveAdd = async (data: CreateSubjectInput) => {
+    if (addingSubject) {
+      setIsLoading(true)
+      try {
+        const response = await subjectService.createSubject(data)
+        if (response.success) {
+          await fetchSubjects()
+          closeAdd()
+          showSuccessToast("Success", "Subject added successfully")
+        } else {
+          showErrorToast("Error", "Failed to add subject")
+        }
+      } catch (err) {
+        showErrorToast("Error", "Failed to add subject")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+  }
+
+  const handlePageChange = (page?: number) => {
+    if (page) {
+      fetchSubjects(page)
     }
   }
 
   return {
     subjects,
+    isLoading,
+    error,
     selectedSubject,
     editingSubject,
     deletingSubject,
@@ -116,14 +144,20 @@ export const useSubjectListing = () => {
     closeView,
     closeEdit,
     closeDelete,
-    updateEditingSubject,
     saveEdit,
     confirmDelete,
 
     addingSubject,
     handleAdd,
     closeAdd,
-    updateAddingSubject,
     saveAdd,
+    refreshSubjects: fetchSubjects,
+
+    // Pagination
+    currentPage,
+    totalPages,
+    totalCount,
+    pageSize,
+    handlePageChange,
   }
 }

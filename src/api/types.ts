@@ -1,53 +1,18 @@
-/**
- * Generic API Response Structure
- */
 export interface ApiResponse<T> {
   timestamp: string;
   statusCode: number;
   success: boolean;
-  data: T;
+  data: {
+    results: T;
+    
+      page: number;
+      size: number;
+      totalCount: number;
+      totalPages: number;
+    
+  };
 }
 
-/**
- * Class Entity
- */
-export interface Class {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  grade: number;
-  description: string;
-  passedStudentsCount: number;
-}
-
-/**
- * Division Entity
- */
-export interface Division {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  name: string;
-  classId: string;
-  class?: Class;
-}
-
-/**
- * Student Enrollment Entity
- */
-export interface StudentEnrollment {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  studentId: string;
-  divisionId: string;
-  status: 'ACTIVE' | 'INACTIVE';
-  division?: Division;
-}
-
-/**
- * Student Entity
- */
 export interface Student {
   id: string;
   createdAt: string;
@@ -55,12 +20,11 @@ export interface Student {
   name: string;
   admissionNo: string;
   dob: string;
-  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  gender: string;
   phone: string;
-  studentEnrollments: StudentEnrollment[];
-  grade?: string | number;
-  enrollmentDate?: string;
 }
+
+export type CreateStudentInput = Omit<Student, 'id' | 'createdAt' | 'updatedAt'>;
 
 export interface Teacher {
   id: string;
@@ -69,5 +33,17 @@ export interface Teacher {
   name: string;
   email: string;
   phone: string;
-  joinDate: string;
+  password: string;
 }
+
+export type CreateTeacherInput = Omit<Teacher, 'id' | 'createdAt' | 'updatedAt'>;
+
+export interface Subject {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  name: string;
+  code: string;
+}
+
+export type CreateSubjectInput = Omit<Subject, 'id' | 'createdAt' | 'updatedAt'>;

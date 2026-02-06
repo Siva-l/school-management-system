@@ -9,6 +9,7 @@ import {
 } from "@chakra-ui/react"
 import { FiMenu, FiBookOpen, FiBook, FiUsers, FiX } from "react-icons/fi"
 import { useState } from "react"
+import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import {
   DrawerBackdrop,
   DrawerBody,
@@ -19,14 +20,12 @@ import {
   DrawerTitle,
 } from "./common/drawer"
 
-interface LayoutProps {
-  children: React.ReactNode
-  currentPage: string
-  onNavigate: (page: string) => void
-}
-
-export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
+export function Layout() {
   const [open, setOpen] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const currentPage = location.pathname.slice(1) || "students"
 
   const menuItems = [
     { id: "students", label: "Students", icon: <FiUsers /> },
@@ -68,7 +67,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
         </HStack>
       </Flex>
 
-      <Box as="main">{children}</Box>
+      <Box as="main"><Outlet /></Box>
 
       <DrawerRoot open={open} onOpenChange={(e: any) => setOpen(e.open)} placement="start">
         <DrawerBackdrop />
@@ -94,7 +93,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                         color={currentPage === item.id ? "blue.600" : "gray.700"}
                         _hover={{ bg: currentPage === item.id ? "blue.50" : "gray.100" }}
                         onClick={() => {
-                            onNavigate(item.id)
+                            navigate(`/${item.id}`)
                             setOpen(false)
                         }}
                         display="flex"
