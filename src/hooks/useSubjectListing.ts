@@ -31,8 +31,6 @@ export const useSubjectListing = () => {
         setTotalPages(response.data.totalPages)
         setTotalCount(response.data.totalCount)
         setCurrentPage(page)
-      } else {
-        setError("Failed to fetch subjects")
       }
     } catch (err) {
       setError("An error occurred while fetching subjects")
@@ -70,8 +68,6 @@ export const useSubjectListing = () => {
           await fetchSubjects()
           closeEdit()
           showSuccessToast("Success", "Subject updated successfully")
-        } else {
-          showErrorToast("Error", "Failed to update subject")
         }
       } catch (err) {
         showErrorToast("Error", "Failed to update subject")
@@ -92,8 +88,6 @@ export const useSubjectListing = () => {
           await fetchSubjects(newPage)
           closeDelete()
           showSuccessToast("Success", "Subject deleted successfully")
-        } else {
-          showErrorToast("Error", "Failed to delete subject")
         }
       } catch (err) {
         showErrorToast("Error", "Failed to delete subject")

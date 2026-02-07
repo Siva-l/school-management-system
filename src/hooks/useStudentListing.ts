@@ -77,8 +77,6 @@ export const useStudentListing = () => {
           await fetchStudents()
           closeEdit()
           showSuccessToast("Success", "Student updated successfully")
-        } else {
-          showErrorToast("Error", "Failed to update student")
         }
       } catch (err) {
         showErrorToast("Error", "Failed to update student")
@@ -100,8 +98,6 @@ export const useStudentListing = () => {
           await fetchStudents(newPage)
           closeDelete()
           showSuccessToast("Success", "Student deleted successfully")
-        } else {
-          showErrorToast("Error", "Failed to delete student")
         }
       } catch (err) {
         showErrorToast("Error", "Failed to delete student")
@@ -122,8 +118,6 @@ export const useStudentListing = () => {
           await fetchStudents()
           closeAdd()
           showSuccessToast("Success", "Student added successfully")
-        } else {
-          showErrorToast("Error", "Failed to add student")
         }
       } catch (err) {
         showErrorToast("Error", "Failed to add student")

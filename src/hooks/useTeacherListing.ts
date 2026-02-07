@@ -31,8 +31,6 @@ export const useTeacherListing = () => {
         setTotalPages(response.data.totalPages)
         setTotalCount(response.data.totalCount)
         setCurrentPage(page)
-      } else {
-        setError("Failed to fetch teachers")
       }
     } catch (err) {
       setError("An error occurred while fetching teachers")
@@ -72,8 +70,6 @@ export const useTeacherListing = () => {
           await fetchTeachers()
           closeEdit()
           showSuccessToast("Success", "Teacher updated successfully")
-        } else {
-          showErrorToast("Error", "Failed to update teacher")
         }
       } catch (err) {
         showErrorToast("Error", "Failed to update teacher")
@@ -94,8 +90,6 @@ export const useTeacherListing = () => {
           await fetchTeachers(newPage)
           closeDelete()
           showSuccessToast("Success", "Teacher deleted successfully")
-        } else {
-          showErrorToast("Error", "Failed to delete teacher")
         }
       } catch (err) {
         showErrorToast("Error", "Failed to delete teacher")
@@ -116,8 +110,6 @@ export const useTeacherListing = () => {
           await fetchTeachers()
           closeAdd()
           showSuccessToast("Success", "Teacher added successfully")
-        } else {
-          showErrorToast("Error", "Failed to add teacher")
         }
       } catch (err) {
         showErrorToast("Error", "Failed to add teacher")
