@@ -1,12 +1,14 @@
 import { Box, Text, VStack, Input, FieldRoot, FieldLabel, Center, Spinner } from "@chakra-ui/react"
 import { useTeacherListing } from "../../hooks/useTeacherListing"
-import type { Teacher } from "../../hooks/useTeacherListing"
 import { ListingPage } from "../../components/common/ListingPage"
 import type { Column } from "../../components/common/ListingPage"
 import { useForm, type UseFormRegister, type FieldErrors } from "react-hook-form"
 import { useEffect } from "react"
+import type { Teacher as ApiTeacher, CreateTeacherInput } from "../../api/types"
 
-const columns: Column<Teacher>[] = [
+type TeacherFormValues = CreateTeacherInput
+
+const columns: Column<ApiTeacher>[] = [
   { key: "name", label: "Name" },
   { key: "email", label: "Email" },
   { key: "phone", label: "Phone" },
@@ -15,8 +17,8 @@ const columns: Column<Teacher>[] = [
 ]
 
 interface TeacherFormProps {
-  register: UseFormRegister<Teacher>
-  errors: FieldErrors<Teacher>
+  register: UseFormRegister<TeacherFormValues>
+  errors: FieldErrors<TeacherFormValues>
 }
 
 const TeacherForm = ({ register, errors }: TeacherFormProps) => (
@@ -108,17 +110,22 @@ function TeacherListingPage() {
     handlePageChange,
   } = useTeacherListing()
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<Teacher>()
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<TeacherFormValues>()
 
   useEffect(() => {
     if (editingTeacher) {
-      reset(editingTeacher)
+      reset({
+        name: editingTeacher.name,
+        email: editingTeacher.email,
+        phone: editingTeacher.phone,
+        password: editingTeacher.password,
+      })
     } else if (addingTeacher) {
-      reset({ name: "", email: "", phone: "", password: "" } as Teacher)
+      reset({ name: "", email: "", phone: "", password: "" })
     }
   }, [editingTeacher, addingTeacher, reset])
 
-  const onFormSubmit = (data: Teacher) => {
+  const onFormSubmit = (data: TeacherFormValues) => {
     if (editingTeacher) {
       saveEdit(data)
     } else {
@@ -126,7 +133,7 @@ function TeacherListingPage() {
     }
   }
 
-  const renderViewDetails = (teacher: Teacher) => (
+  const renderViewDetails = (teacher: ApiTeacher) => (
     <VStack align="start" gap={4}>
       <Box>
         <Text fontWeight="bold" color="gray.600" fontSize="sm">Name</Text>
@@ -199,6 +206,5 @@ function TeacherListingPage() {
     />
   )
 }
-
 
 export default TeacherListingPage

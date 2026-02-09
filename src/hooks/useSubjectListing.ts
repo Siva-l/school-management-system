@@ -59,7 +59,7 @@ export const useSubjectListing = () => {
 
 
 
-  const saveEdit = async (data: Subject) => {
+  const saveEdit = async (data: CreateSubjectInput) => {
     if (editingSubject && editingSubject.id) {
       setIsLoading(true)
       try {

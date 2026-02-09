@@ -67,7 +67,7 @@ export const useStudentListing = () => {
 
 
 
-  const saveEdit = async (data: Student) => {
+  const saveEdit = async (data: CreateStudentInput) => {
     if (editingStudent && editingStudent.id) {
       setIsLoading(true)
       try {

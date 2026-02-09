@@ -1,12 +1,14 @@
 import { Box, Text, VStack, Input, FieldRoot, FieldLabel, Spinner, Center, NativeSelect } from "@chakra-ui/react"
 import { useStudentListing } from "../../hooks/useStudentListing"
-import type { Student } from "../../hooks/useStudentListing"
 import { ListingPage } from "../../components/common/ListingPage"
 import type { Column } from "../../components/common/ListingPage"
 import { useForm, type UseFormRegister, type FieldErrors } from "react-hook-form"
 import { useEffect } from "react"
+import type { Student as ApiStudent, CreateStudentInput } from "../../api/types"
 
-const columns: Column<Student>[] = [
+type StudentFormValues = CreateStudentInput
+
+const columns: Column<ApiStudent>[] = [
   { key: "name", label: "Name" },
   { key: "admissionNo", label: "Admission No" },
   { key: "gender", label: "Gender" },
@@ -16,8 +18,8 @@ const columns: Column<Student>[] = [
 ]
 
 interface StudentFormProps {
-  register: UseFormRegister<Student>
-  errors: FieldErrors<Student>
+  register: UseFormRegister<StudentFormValues>
+  errors: FieldErrors<StudentFormValues>
 }
 
 const StudentForm = ({ register, errors }: StudentFormProps) => (
@@ -128,17 +130,23 @@ function StudentListingPage() {
     handlePageChange,
   } = useStudentListing()
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<Student>()
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<StudentFormValues>()
 
   useEffect(() => {
     if (editingStudent) {
-      reset(editingStudent)
+      reset({
+        name: editingStudent.name,
+        admissionNo: editingStudent.admissionNo,
+        gender: editingStudent.gender,
+        dob: editingStudent.dob,
+        phone: editingStudent.phone,
+      })
     } else if (addingStudent) {
-      reset({ name: "", admissionNo: "", gender: "MALE", dob: "", phone: "" } as Student) 
+      reset({ name: "", admissionNo: "", gender: "MALE", dob: "", phone: "" }) 
     }
   }, [editingStudent, addingStudent, reset])
 
-  const onFormSubmit = (data: Student) => {
+  const onFormSubmit = (data: StudentFormValues) => {
     if (editingStudent) {
       saveEdit(data)
     } else {
@@ -146,7 +154,7 @@ function StudentListingPage() {
     }
   }
 
-  const renderViewDetails = (student: Student) => (
+  const renderViewDetails = (student: ApiStudent) => (
     <VStack align="start" gap={4}>
       <Box>
         <Text fontWeight="bold" color="gray.600" fontSize="sm">Name</Text>
@@ -223,6 +231,5 @@ function StudentListingPage() {
     />
   )
 }
-
 
 export default StudentListingPage

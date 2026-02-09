@@ -1,15 +1,6 @@
 import apiClient from "../api/apiClient";
 import type { ApiResponse, Teacher, CreateTeacherInput } from "../api/types";
 
-const sanitizeTeacherPayload = (teacherData: Partial<Teacher>) => {
-    const { 
-        id, 
-        createdAt, 
-        updatedAt, 
-        ...sanitized 
-    } = teacherData;
-    return sanitized;
-};
 
 export const teacherService = {
     getAllTeachers: async (page: number, size: number): Promise<ApiResponse<Teacher[]>> => {
@@ -24,9 +15,10 @@ export const teacherService = {
         const response = await apiClient.post<ApiResponse<Teacher>>('/teachers/create', teacherData);
         return response.data;
     },
-    updateTeacher: async (id: string, teacherData: Partial<Teacher>): Promise<ApiResponse<Teacher>> => {
-        const payload = sanitizeTeacherPayload(teacherData);
-        const response = await apiClient.put<ApiResponse<Teacher>>(`/teachers/${id}`, payload);
+    updateTeacher: async (id: string, teacherData: Partial<CreateTeacherInput>): Promise<ApiResponse<Teacher>> => {
+        const { name, email, phone, password } = teacherData;
+        const cleanData = { name, email, phone, password };
+        const response = await apiClient.put<ApiResponse<Teacher>>(`/teachers/${id}`, cleanData);
         return response.data;
     },
     deleteTeacher: async (id: string): Promise<ApiResponse<void>> => {

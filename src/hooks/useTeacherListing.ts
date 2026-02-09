@@ -61,7 +61,7 @@ export const useTeacherListing = () => {
 
 
 
-  const saveEdit = async (data: Teacher) => {
+  const saveEdit = async (data: CreateTeacherInput) => {
     if (editingTeacher && editingTeacher.id) {
       setIsLoading(true)
       try {

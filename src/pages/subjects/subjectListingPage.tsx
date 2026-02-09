@@ -1,20 +1,22 @@
 import { Box, Text, VStack, Input, FieldRoot, FieldLabel, Center, Spinner } from "@chakra-ui/react"
 import { useSubjectListing } from "../../hooks/useSubjectListing"
-import type { Subject } from "../../hooks/useSubjectListing"
 import { ListingPage } from "../../components/common/ListingPage"
 import type { Column } from "../../components/common/ListingPage"
 import { useForm, type UseFormRegister, type FieldErrors } from "react-hook-form"
 import { useEffect } from "react"
+import type { Subject as ApiSubject, CreateSubjectInput } from "../../api/types"
 
-const columns: Column<Subject>[] = [
+type SubjectFormValues = CreateSubjectInput
+
+const columns: Column<ApiSubject>[] = [
   { key: "name", label: "Subject Name" },
   { key: "code", label: "Code" },
   { key: "actions", label: "Actions" },
 ]
 
 interface SubjectFormProps {
-  register: UseFormRegister<Subject>
-  errors: FieldErrors<Subject>
+  register: UseFormRegister<SubjectFormValues>
+  errors: FieldErrors<SubjectFormValues>
 }
 
 const SubjectForm = ({ register, errors }: SubjectFormProps) => (
@@ -80,17 +82,20 @@ function SubjectListingPage() {
     handlePageChange,
   } = useSubjectListing()
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<Subject>()
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<SubjectFormValues>()
 
   useEffect(() => {
     if (editingSubject) {
-      reset(editingSubject)
+      reset({
+        name: editingSubject.name,
+        code: editingSubject.code,
+      })
     } else if (addingSubject) {
-      reset({ name: "", code: "" } as Subject)
+      reset({ name: "", code: "" })
     }
   }, [editingSubject, addingSubject, reset])
 
-  const onFormSubmit = (data: Subject) => {
+  const onFormSubmit = (data: SubjectFormValues) => {
     if (editingSubject) {
       saveEdit(data)
     } else {
@@ -98,7 +103,7 @@ function SubjectListingPage() {
     }
   }
 
-  const renderViewDetails = (subject: Subject) => (
+  const renderViewDetails = (subject: ApiSubject) => (
     <VStack align="start" gap={4}>
       <Box>
         <Text fontWeight="bold" color="gray.600" fontSize="sm">Subject Name</Text>
@@ -163,6 +168,5 @@ function SubjectListingPage() {
     />
   )
 }
-
 
 export default SubjectListingPage
