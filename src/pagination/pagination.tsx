@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Button, Flex, IconButton, Text } from '@chakra-ui/react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { DOTS, usePagination } from '../hooks/usePagination';
+import { DOTS, usePagination } from './usePagination';
 
 interface IProps {
   totalCount: number;
