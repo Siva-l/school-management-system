@@ -86,10 +86,11 @@ function SubjectListingPage() {
 
   useEffect(() => {
     if (editingSubject) {
-      reset({
+      const payload: CreateSubjectInput = {
         name: editingSubject.name,
         code: editingSubject.code,
-      })
+      }
+      reset(payload)
     } else if (addingSubject) {
       reset({ name: "", code: "" })
     }

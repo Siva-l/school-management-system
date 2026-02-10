@@ -114,12 +114,13 @@ function TeacherListingPage() {
 
   useEffect(() => {
     if (editingTeacher) {
-      reset({
+      const payload: CreateTeacherInput = {
         name: editingTeacher.name,
         email: editingTeacher.email,
         phone: editingTeacher.phone,
         password: editingTeacher.password,
-      })
+      }
+      reset(payload)
     } else if (addingTeacher) {
       reset({ name: "", email: "", phone: "", password: "" })
     }

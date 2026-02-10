@@ -134,13 +134,14 @@ function StudentListingPage() {
 
   useEffect(() => {
     if (editingStudent) {
-      reset({
+      const payload: CreateStudentInput = {
         name: editingStudent.name,
         admissionNo: editingStudent.admissionNo,
         gender: editingStudent.gender,
         dob: editingStudent.dob,
         phone: editingStudent.phone,
-      })
+      }
+      reset(payload)
     } else if (addingStudent) {
       reset({ name: "", admissionNo: "", gender: "MALE", dob: "", phone: "" }) 
     }
