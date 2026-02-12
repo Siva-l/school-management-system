@@ -17,9 +17,8 @@ export const useSubjectListing = () => {
   const [pageSize] = useState(3)
   
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
-  const [editingSubject, setEditingSubject] = useState<Subject | null>(null)
+  const [formData, setFormData] = useState<Subject | CreateSubjectInput | null>(null)
   const [deletingSubject, setDeletingSubject] = useState<Subject | null>(null)
-  const [addingSubject, setAddingSubject] = useState<CreateSubjectInput | null>(null)
 
   const fetchSubjects = useCallback(async (page: number = currentPage) => {
     setIsLoading(true)
@@ -45,28 +44,27 @@ export const useSubjectListing = () => {
   }, [])
 
   const handleView = (subject: Subject) => setSelectedSubject(subject)
-  const handleEdit = (subject: Subject) => setEditingSubject(subject)
+  const handleEdit = (subject: Subject) => setFormData(subject)
   const handleDelete = (subject: Subject) => setDeletingSubject(subject)
-  const handleAdd = () => setAddingSubject({
+  const handleAdd = () => setFormData({
     name: "",
     code: "",
   })
 
   const closeView = () => setSelectedSubject(null)
-  const closeEdit = () => setEditingSubject(null)
+  const closeForm = () => setFormData(null)
   const closeDelete = () => setDeletingSubject(null)
-  const closeAdd = () => setAddingSubject(null)
 
 
 
   const saveEdit = async (data: CreateSubjectInput) => {
-    if (editingSubject && editingSubject.id) {
+    if (formData && 'id' in formData) {
       setIsLoading(true)
       try {
-        const response = await subjectService.updateSubject(editingSubject.id, data)
+        const response = await subjectService.updateSubject(formData.id, data)
         if (response.success) {
           await fetchSubjects()
-          closeEdit()
+          closeForm()
           showSuccessToast("Success", "Subject updated successfully")
         }
       } catch (err) {
@@ -100,13 +98,13 @@ export const useSubjectListing = () => {
 
 
   const saveAdd = async (data: CreateSubjectInput) => {
-    if (addingSubject) {
+    if (formData && !('id' in formData)) {
       setIsLoading(true)
       try {
         const response = await subjectService.createSubject(data)
         if (response.success) {
           await fetchSubjects()
-          closeAdd()
+          closeForm()
           showSuccessToast("Success", "Subject added successfully")
         } else {
           showErrorToast("Error", "Failed to add subject")
@@ -130,20 +128,18 @@ export const useSubjectListing = () => {
     isLoading,
     error,
     selectedSubject,
-    editingSubject,
+    formData,
     deletingSubject,
     handleView,
     handleEdit,
     handleDelete,
     closeView,
-    closeEdit,
+    closeForm,
     closeDelete,
     saveEdit,
     confirmDelete,
 
-    addingSubject,
     handleAdd,
-    closeAdd,
     saveAdd,
     refreshSubjects: fetchSubjects,
 

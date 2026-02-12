@@ -17,9 +17,9 @@ interface StudentState {
 
   // Selected Items for Modals
   selectedStudent: Student | null;
-  editingStudent: Student | null;
+  activeStudent: CreateStudentInput | Student | null;
+  formMode: 'ADD' | 'EDIT' | null;
   deletingStudent: Student | null;
-  addingStudent: CreateStudentInput | null;
 
   // Actions
   fetchStudents: (page?: number) => Promise<void>;
@@ -61,9 +61,9 @@ export const useStudentStore = create<StudentState>((set, get) => ({
 
   // Selected Items State
   selectedStudent: null,
-  editingStudent: null,
+  activeStudent: null,
+  formMode: null,
   deletingStudent: null,
-  addingStudent: null,
 
   fetchStudents: async (page = get().currentPage) => {
     set({ isLoading: true, error: null });
@@ -92,7 +92,8 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   closeView: () => set({ selectedStudent: null }),
 
   handleAdd: () => set({
-    addingStudent: {
+    formMode: 'ADD',
+    activeStudent: {
       name: "",
       admissionNo: "",
       dob: "",
@@ -100,14 +101,14 @@ export const useStudentStore = create<StudentState>((set, get) => ({
       phone: "",
     }
   }),
-  closeAdd: () => set({ addingStudent: null }),
+  closeAdd: () => set({ formMode: null, activeStudent: null }),
   saveAdd: async (data) => {
     set({ isLoading: true });
     try {
       const response = await studentService.createStudent(data);
       if (response.success) {
         await get().fetchStudents(); 
-        set({ addingStudent: null }); 
+        set({ formMode: null, activeStudent: null }); 
         showSuccessToast("Success", "Student added successfully");
       }
     } catch (err) {
@@ -117,17 +118,17 @@ export const useStudentStore = create<StudentState>((set, get) => ({
     }
   },
 
-  handleEdit: (student) => set({ editingStudent: student }),
-  closeEdit: () => set({ editingStudent: null }),
+  handleEdit: (student) => set({ formMode: 'EDIT', activeStudent: student }),
+  closeEdit: () => set({ formMode: null, activeStudent: null }),
   saveEdit: async (data) => {
-    const { editingStudent, fetchStudents } = get();
-    if (editingStudent && editingStudent.id) {
+    const { activeStudent, formMode, fetchStudents } = get();
+    if (formMode === 'EDIT' && activeStudent && 'id' in activeStudent) {
       set({ isLoading: true });
       try {
-        const response = await studentService.updateStudent(editingStudent.id, data);
+        const response = await studentService.updateStudent(activeStudent.id, data);
         if (response.success) {
           await fetchStudents();
-          set({ editingStudent: null });
+          set({ formMode: null, activeStudent: null });
           showSuccessToast("Success", "Student updated successfully");
         }
       } catch (err) {

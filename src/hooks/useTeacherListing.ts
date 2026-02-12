@@ -17,9 +17,8 @@ export const useTeacherListing = () => {
   const [pageSize] = useState(3)
   
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null)
-  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null)
+  const [formData, setFormData] = useState<Teacher | CreateTeacherInput | null>(null)
   const [deletingTeacher, setDeletingTeacher] = useState<Teacher | null>(null)
-  const [addingTeacher, setAddingTeacher] = useState<CreateTeacherInput | null>(null)
 
   const fetchTeachers = useCallback(async (page: number = currentPage) => {
     setIsLoading(true)
@@ -45,9 +44,9 @@ export const useTeacherListing = () => {
   }, [])
 
   const handleView = (teacher: Teacher) => setSelectedTeacher(teacher)
-  const handleEdit = (teacher: Teacher) => setEditingTeacher(teacher)
+  const handleEdit = (teacher: Teacher) => setFormData(teacher)
   const handleDelete = (teacher: Teacher) => setDeletingTeacher(teacher)
-  const handleAdd = () => setAddingTeacher({
+  const handleAdd = () => setFormData({
     name: "",
     email: "",
     phone: "",
@@ -55,20 +54,19 @@ export const useTeacherListing = () => {
   })
 
   const closeView = () => setSelectedTeacher(null)
-  const closeEdit = () => setEditingTeacher(null)
+  const closeForm = () => setFormData(null)
   const closeDelete = () => setDeletingTeacher(null)
-  const closeAdd = () => setAddingTeacher(null)
 
 
 
   const saveEdit = async (data: CreateTeacherInput) => {
-    if (editingTeacher && editingTeacher.id) {
+    if (formData && 'id' in formData) {
       setIsLoading(true)
       try {
-        const response = await teacherService.updateTeacher(editingTeacher.id, data)
+        const response = await teacherService.updateTeacher(formData.id, data)
         if (response.success) {
           await fetchTeachers()
-          closeEdit()
+          closeForm()
           showSuccessToast("Success", "Teacher updated successfully")
         }
       } catch (err) {
@@ -102,13 +100,13 @@ export const useTeacherListing = () => {
 
 
   const saveAdd = async (data: CreateTeacherInput) => {
-    if (addingTeacher) {
+    if (formData && !('id' in formData)) {
       setIsLoading(true)
       try {
         const response = await teacherService.createTeacher(data)
         if (response.success) {
           await fetchTeachers()
-          closeAdd()
+          closeForm()
           showSuccessToast("Success", "Teacher added successfully")
         }
       } catch (err) {
@@ -130,20 +128,17 @@ export const useTeacherListing = () => {
     isLoading,
     error,
     selectedTeacher,
-    editingTeacher,
+    formData,
     deletingTeacher,
     handleView,
     handleEdit,
     handleDelete,
     closeView,
-    closeEdit,
+    closeForm,
     closeDelete,
     saveEdit,
     confirmDelete,
-
-    addingTeacher,
     handleAdd,
-    closeAdd,
     saveAdd,
     refreshTeachers: fetchTeachers,
 

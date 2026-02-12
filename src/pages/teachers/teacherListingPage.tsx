@@ -86,20 +86,18 @@ function TeacherListingPage() {
     isLoading,
     error,
     selectedTeacher,
-    editingTeacher,
+    formData,
     deletingTeacher,
     handleView,
     handleEdit,
     handleDelete,
     closeView,
-    closeEdit,
+    closeForm,
     closeDelete,
     saveEdit,
     confirmDelete,
 
-    addingTeacher,
     handleAdd,
-    closeAdd,
     saveAdd,
 
     // Pagination
@@ -111,6 +109,10 @@ function TeacherListingPage() {
   } = useTeacherListing()
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<TeacherFormValues>()
+
+  const isEdit = !!(formData && "id" in formData)
+  const editingTeacher = isEdit ? (formData as ApiTeacher) : null
+  const addingTeacher = !isEdit && formData ? (formData as CreateTeacherInput) : null
 
   useEffect(() => {
     if (editingTeacher) {
@@ -187,9 +189,9 @@ function TeacherListingPage() {
       onDelete={handleDelete}
       onAdd={handleAdd}
       onCloseView={closeView}
-      onCloseEdit={closeEdit}
+      onCloseEdit={closeForm}
       onCloseDelete={closeDelete}
-      onCloseAdd={closeAdd}
+      onCloseAdd={closeForm}
       onSubmit={() => handleSubmit(onFormSubmit)()}
       onConfirmDelete={confirmDelete}
       renderViewDetails={renderViewDetails}

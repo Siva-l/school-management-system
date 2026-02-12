@@ -58,20 +58,18 @@ function SubjectListingPage() {
     isLoading,
     error,
     selectedSubject,
-    editingSubject,
+    formData,
     deletingSubject,
     handleView,
     handleEdit,
     handleDelete,
     closeView,
-    closeEdit,
+    closeForm,
     closeDelete,
     saveEdit,
     confirmDelete,
 
-    addingSubject,
     handleAdd,
-    closeAdd,
     saveAdd,
 
     // Pagination
@@ -83,6 +81,10 @@ function SubjectListingPage() {
   } = useSubjectListing()
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<SubjectFormValues>()
+
+  const isEdit = !!(formData && "id" in formData)
+  const editingSubject = isEdit ? (formData as ApiSubject) : null
+  const addingSubject = !isEdit && formData ? (formData as CreateSubjectInput) : null
 
   useEffect(() => {
     if (editingSubject) {
@@ -149,9 +151,9 @@ function SubjectListingPage() {
       onDelete={handleDelete}
       onAdd={handleAdd}
       onCloseView={closeView}
-      onCloseEdit={closeEdit}
+      onCloseEdit={closeForm}
       onCloseDelete={closeDelete}
-      onCloseAdd={closeAdd}
+      onCloseAdd={closeForm}
       onSubmit={() => handleSubmit(onFormSubmit)()}
       onConfirmDelete={confirmDelete}
       renderViewDetails={renderViewDetails}

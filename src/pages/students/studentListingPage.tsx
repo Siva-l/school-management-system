@@ -1,5 +1,5 @@
 import { Box, Text, VStack, Input, FieldRoot, FieldLabel, Spinner, Center, NativeSelect } from "@chakra-ui/react"
-import { useStudentListing } from "../../hooks/useStudentListing"
+import { useStudentStore } from "../../store/student.store"
 import { ListingPage } from "../../components/common/ListingPage"
 import type { Column } from "../../components/common/ListingPage"
 import { useForm, type UseFormRegister, type FieldErrors } from "react-hook-form"
@@ -106,8 +106,10 @@ function StudentListingPage() {
     isLoading,
     error,
     selectedStudent,
-    editingStudent,
+    activeStudent,
+    formMode,
     deletingStudent,
+    fetchStudents,
     handleView,
     handleEdit,
     handleDelete,
@@ -116,8 +118,6 @@ function StudentListingPage() {
     closeDelete,
     saveEdit,
     confirmDelete,
-    
-    addingStudent,
     handleAdd,
     closeAdd,
     saveAdd,
@@ -128,27 +128,31 @@ function StudentListingPage() {
     totalCount,
     pageSize,
     handlePageChange,
-  } = useStudentListing()
+  } = useStudentStore()
+
+  useEffect(() => {
+    fetchStudents()
+  }, [fetchStudents])
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<StudentFormValues>()
 
   useEffect(() => {
-    if (editingStudent) {
+    if (formMode === 'EDIT' && activeStudent) {
       const payload: CreateStudentInput = {
-        name: editingStudent.name,
-        admissionNo: editingStudent.admissionNo,
-        gender: editingStudent.gender,
-        dob: editingStudent.dob,
-        phone: editingStudent.phone,
+        name: activeStudent.name,
+        admissionNo: activeStudent.admissionNo,
+        gender: activeStudent.gender,
+        dob: activeStudent.dob,
+        phone: activeStudent.phone,
       }
       reset(payload)
-    } else if (addingStudent) {
+    } else if (formMode === 'ADD') {
       reset({ name: "", admissionNo: "", gender: "MALE", dob: "", phone: "" }) 
     }
-  }, [editingStudent, addingStudent, reset])
+  }, [formMode, activeStudent, reset])
 
   const onFormSubmit = (data: StudentFormValues) => {
-    if (editingStudent) {
+    if (formMode === 'EDIT') {
       saveEdit(data)
     } else {
       saveAdd(data)
@@ -204,9 +208,9 @@ function StudentListingPage() {
       columns={columns}
       data={students}
       selectedItem={selectedStudent}
-      editingItem={editingStudent}
+      editingItem={formMode === 'EDIT' ? activeStudent as ApiStudent : null}
       deletingItem={deletingStudent}
-      addingItem={addingStudent}
+      addingItem={formMode === 'ADD' ? activeStudent : null}
       onView={handleView}
       onEdit={handleEdit}
       onDelete={handleDelete}
