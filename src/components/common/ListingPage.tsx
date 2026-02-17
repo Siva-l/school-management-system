@@ -20,7 +20,6 @@ import {
   TableColumnHeader,
   TableBody,
   TableCell,
-  Stack,
 } from "@chakra-ui/react"
 import { FiPlus, FiEye, FiEdit2, FiTrash2, FiX } from "react-icons/fi"
 import { AppButton } from "./AppButton"
@@ -38,8 +37,7 @@ interface ListingPageProps<T> {
   addButtonText: string
   columns: Column<T>[]
   data: T[]
-  selectedItem: T | null
-  editingItem: T | null
+  selectedItem?: T | null
   deletingItem: T | null
   addingItem?: Partial<T> | null
   onView: (item: T) => void
@@ -47,13 +45,12 @@ interface ListingPageProps<T> {
   onDelete: (item: T) => void
   onAdd?: () => void
   onCloseView: () => void
-  onCloseEdit: () => void
   onCloseDelete: () => void
   onCloseAdd?: () => void
-  onSubmit: () => void
+  onSubmit?: () => void
   onConfirmDelete: () => void
   renderViewDetails: (item: T) => ReactNode
-  renderFields: (item: T | Partial<T>) => ReactNode
+  renderFields?: (item: T | Partial<T>) => ReactNode
   // Pagination props
   totalCount?: number
   currentPage?: number
@@ -69,21 +66,15 @@ export function ListingPage<T extends { id: number | string }>({
   columns,
   data,
   selectedItem,
-  editingItem,
   deletingItem,
-  addingItem,
   onView,
   onEdit,
   onDelete,
   onAdd,
   onCloseView,
-  onCloseEdit,
   onCloseDelete,
-  onCloseAdd,
-  onSubmit,
   onConfirmDelete,
   renderViewDetails,
-  renderFields,
   totalCount,
   currentPage,
   totalPages,
@@ -208,38 +199,7 @@ export function ListingPage<T extends { id: number | string }>({
         </DialogPositioner>
       </DialogRoot>
 
-      <DialogRoot open={!!editingItem || !!addingItem} onOpenChange={(e) => !e.open && (editingItem ? onCloseEdit() : onCloseAdd?.())}>
-        <DialogBackdrop />
-        <DialogPositioner>
-          <DialogContent>
-            <DialogCloseTrigger asChild position="absolute" top="2" right="2">
-              <IconButton variant="ghost" size="sm" aria-label="Close">
-                <FiX />
-              </IconButton>
-            </DialogCloseTrigger>
-            <DialogHeader>
-              <DialogTitle>{editingItem ? "Edit " : "Add New "}{title.slice(0, -1)}</DialogTitle>
-            </DialogHeader>
-            <DialogBody>
-              {(editingItem || addingItem) && (
-                <Stack gap={4}>
-                  {renderFields((editingItem || addingItem)!)}
-                </Stack>
-              )}
-            </DialogBody>
-            <DialogFooter gap={3}>
-              <AppButton colorPalette="blue" flex="1" onClick={onSubmit}>
-                {editingItem ? "Update" : "Create"}
-              </AppButton>
-              <DialogActionTrigger asChild>
-                <AppButton variant="subtle" colorPalette="gray" flex="1" onClick={editingItem ? onCloseEdit : onCloseAdd}>
-                  Cancel
-                </AppButton>
-              </DialogActionTrigger>
-            </DialogFooter>
-          </DialogContent>
-        </DialogPositioner>
-      </DialogRoot>
+
 
       <DialogRoot open={!!deletingItem} onOpenChange={(e) => !e.open && onCloseDelete()}>
         <DialogBackdrop />

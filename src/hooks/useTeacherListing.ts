@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { teacherService } from "../service/teacherService"
-import type { Teacher, CreateTeacherInput } from "../api/types"
+import type { Teacher } from "../api/types"
 import { showErrorToast, showSuccessToast } from "../util/toast.util"
 
 export type { Teacher } from "../api/types"
@@ -16,8 +16,8 @@ export const useTeacherListing = () => {
   const [totalCount, setTotalCount] = useState(0)
   const [pageSize] = useState(3)
   
-  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null)
-  const [formData, setFormData] = useState<Teacher | CreateTeacherInput | null>(null)
+  const [viewingTeacherId, setViewingTeacherId] = useState<string | null>(null)
+  const [formTeacherId, setFormTeacherId] = useState<string | null>(null) // null for add, string for edit
   const [deletingTeacher, setDeletingTeacher] = useState<Teacher | null>(null)
 
   const fetchTeachers = useCallback(async (page: number = currentPage) => {
@@ -43,39 +43,16 @@ export const useTeacherListing = () => {
     fetchTeachers()
   }, [])
 
-  const handleView = (teacher: Teacher) => setSelectedTeacher(teacher)
-  const handleEdit = (teacher: Teacher) => setFormData(teacher)
-  const handleDelete = (teacher: Teacher) => setDeletingTeacher(teacher)
-  const handleAdd = () => setFormData({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-  })
-
-  const closeView = () => setSelectedTeacher(null)
-  const closeForm = () => setFormData(null)
-  const closeDelete = () => setDeletingTeacher(null)
-
-
-
-  const saveEdit = async (data: CreateTeacherInput) => {
-    if (formData && 'id' in formData) {
-      setIsLoading(true)
-      try {
-        const response = await teacherService.updateTeacher(formData.id, data)
-        if (response.success) {
-          await fetchTeachers()
-          closeForm()
-          showSuccessToast("Success", "Teacher updated successfully")
-        }
-      } catch (err) {
-        showErrorToast("Error", "Failed to update teacher")
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  const handleView = (teacher: Teacher) => {
+    setViewingTeacherId(teacher.id)
   }
+  const handleEdit = (teacher: Teacher) => setFormTeacherId(teacher.id)
+  const handleDelete = (teacher: Teacher) => setDeletingTeacher(teacher)
+  const handleAdd = () => setFormTeacherId('new')
+
+  const closeView = () => setViewingTeacherId(null)
+  const closeForm = () => setFormTeacherId(null)
+  const closeDelete = () => setDeletingTeacher(null)
 
   const confirmDelete = async () => {
     if (deletingTeacher && deletingTeacher.id) {
@@ -97,26 +74,6 @@ export const useTeacherListing = () => {
     }
   }
 
-
-
-  const saveAdd = async (data: CreateTeacherInput) => {
-    if (formData && !('id' in formData)) {
-      setIsLoading(true)
-      try {
-        const response = await teacherService.createTeacher(data)
-        if (response.success) {
-          await fetchTeachers()
-          closeForm()
-          showSuccessToast("Success", "Teacher added successfully")
-        }
-      } catch (err) {
-        showErrorToast("Error", "Failed to add teacher")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-  }
-
   const handlePageChange = (page?: number) => {
     if (page) {
       fetchTeachers(page)
@@ -127,19 +84,18 @@ export const useTeacherListing = () => {
     teachers,
     isLoading,
     error,
-    selectedTeacher,
-    formData,
+    viewingTeacherId,
+    formTeacherId,
     deletingTeacher,
+    fetchTeachers,
     handleView,
     handleEdit,
     handleDelete,
+    handleAdd,
     closeView,
     closeForm,
     closeDelete,
-    saveEdit,
     confirmDelete,
-    handleAdd,
-    saveAdd,
     refreshTeachers: fetchTeachers,
 
     // Pagination

@@ -2,9 +2,11 @@ import { Box, Text, VStack, Input, FieldRoot, FieldLabel, Spinner, Center, Nativ
 import { useStudentStore } from "../../store/student.store"
 import { ListingPage } from "../../components/common/ListingPage"
 import type { Column } from "../../components/common/ListingPage"
-import { useForm, type UseFormRegister, type FieldErrors } from "react-hook-form"
+import { type UseFormRegister, type FieldErrors } from "react-hook-form"
 import { useEffect } from "react"
 import type { Student as ApiStudent, CreateStudentInput } from "../../api/types"
+import { StudentEditModal } from "./StudentEditModal"
+import { StudentViewModal } from "./StudentViewModal"
 
 type StudentFormValues = CreateStudentInput
 
@@ -22,7 +24,7 @@ interface StudentFormProps {
   errors: FieldErrors<StudentFormValues>
 }
 
-const StudentForm = ({ register, errors }: StudentFormProps) => (
+export const StudentForm = ({ register, errors }: StudentFormProps) => (
   <>
     <FieldRoot invalid={!!errors.name}>
       <FieldLabel>
@@ -105,22 +107,18 @@ function StudentListingPage() {
     students,
     isLoading,
     error,
-    selectedStudent,
-    activeStudent,
-    formMode,
+    viewingStudentId,
+    formStudentId,
     deletingStudent,
     fetchStudents,
     handleView,
     handleEdit,
     handleDelete,
     closeView,
-    closeEdit,
+    closeForm,
     closeDelete,
-    saveEdit,
     confirmDelete,
     handleAdd,
-    closeAdd,
-    saveAdd,
     
     // Pagination
     currentPage,
@@ -134,29 +132,8 @@ function StudentListingPage() {
     fetchStudents()
   }, [fetchStudents])
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<StudentFormValues>()
-
-  useEffect(() => {
-    if (formMode === 'EDIT' && activeStudent) {
-      const payload: CreateStudentInput = {
-        name: activeStudent.name,
-        admissionNo: activeStudent.admissionNo,
-        gender: activeStudent.gender,
-        dob: activeStudent.dob,
-        phone: activeStudent.phone,
-      }
-      reset(payload)
-    } else if (formMode === 'ADD') {
-      reset({ name: "", admissionNo: "", gender: "MALE", dob: "", phone: "" }) 
-    }
-  }, [formMode, activeStudent, reset])
-
-  const onFormSubmit = (data: StudentFormValues) => {
-    if (formMode === 'EDIT') {
-      saveEdit(data)
-    } else {
-      saveAdd(data)
-    }
+  if (error) {
+    return <Text color="red.500">Error: {error}</Text>
   }
 
   const renderViewDetails = (student: ApiStudent) => (
@@ -201,39 +178,42 @@ function StudentListingPage() {
   }
 
   return (
-    <ListingPage
-      title="Students"
-      description="Manage student records"
-      addButtonText="Add Student"
-      columns={columns}
-      data={students}
-      selectedItem={selectedStudent}
-      editingItem={formMode === 'EDIT' ? activeStudent as ApiStudent : null}
-      deletingItem={deletingStudent}
-      addingItem={formMode === 'ADD' ? activeStudent : null}
-      onView={handleView}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-      onAdd={handleAdd}
-      onCloseView={closeView}
-      onCloseEdit={closeEdit}
-      onCloseDelete={closeDelete}
-      onCloseAdd={closeAdd}
-      onSubmit={() => handleSubmit(onFormSubmit)()}
-      onConfirmDelete={confirmDelete}
-      renderViewDetails={renderViewDetails}
-      renderFields={() => (
-        <StudentForm 
-          register={register} 
-          errors={errors} 
-        />
-      )}
-      totalCount={totalCount}
-      currentPage={currentPage}
-      totalPages={totalPages}
-      pageSize={pageSize}
-      onPageChange={handlePageChange}
-    />
+    <>
+      <ListingPage
+        title="Students"
+        description="Manage student records"
+        addButtonText="Add Student"
+        columns={columns}
+        data={students}
+        deletingItem={deletingStudent}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onAdd={handleAdd}
+        onCloseView={closeView}
+        onCloseDelete={closeDelete}
+        onConfirmDelete={confirmDelete}
+        renderViewDetails={renderViewDetails}
+        totalCount={totalCount}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+      />
+
+      <StudentViewModal
+        studentId={viewingStudentId}
+        isOpen={!!viewingStudentId}
+        onClose={closeView}
+      />
+
+      <StudentEditModal
+        studentId={formStudentId}
+        isOpen={!!formStudentId}
+        onClose={closeForm}
+        onSuccess={fetchStudents}
+      />
+    </>
   )
 }
 

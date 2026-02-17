@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { studentService } from '../service/studentService';
 import { showErrorToast, showSuccessToast } from '../util/toast.util';
-import type { Student, CreateStudentInput } from '../api/types';
+import type { Student } from '../api/types';
 
 interface StudentState {
   // Data
@@ -16,9 +16,8 @@ interface StudentState {
   pageSize: number;
 
   // Selected Items for Modals
-  selectedStudent: Student | null;
-  activeStudent: CreateStudentInput | Student | null;
-  formMode: 'ADD' | 'EDIT' | null;
+  viewingStudentId: string | null;
+  formStudentId: string | null; // null for add, string for edit
   deletingStudent: Student | null;
 
   // Actions
@@ -28,15 +27,10 @@ interface StudentState {
   handleView: (student: Student) => void;
   closeView: () => void;
   
-  // Add Actions
+  // Form Actions (Add/Edit)
   handleAdd: () => void;
-  closeAdd: () => void;
-  saveAdd: (data: CreateStudentInput) => Promise<void>;
-
-  // Edit Actions
   handleEdit: (student: Student) => void;
-  closeEdit: () => void;
-  saveEdit: (data: CreateStudentInput) => Promise<void>;
+  closeForm: () => void;
 
   // Delete Actions
   handleDelete: (student: Student) => void;
@@ -60,9 +54,8 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   pageSize: 3,
 
   // Selected Items State
-  selectedStudent: null,
-  activeStudent: null,
-  formMode: null,
+  viewingStudentId: null,
+  formStudentId: null,
   deletingStudent: null,
 
   fetchStudents: async (page = get().currentPage) => {
@@ -88,56 +81,12 @@ export const useStudentStore = create<StudentState>((set, get) => ({
     }
   },
 
-  handleView: (student) => set({ selectedStudent: student }),
-  closeView: () => set({ selectedStudent: null }),
+  handleAdd: () => set({ formStudentId: 'new' }), // 'new' means add mode
+  handleEdit: (student) => set({ formStudentId: student.id }),
+  closeForm: () => set({ formStudentId: null }),
 
-  handleAdd: () => set({
-    formMode: 'ADD',
-    activeStudent: {
-      name: "",
-      admissionNo: "",
-      dob: "",
-      gender: "",
-      phone: "",
-    }
-  }),
-  closeAdd: () => set({ formMode: null, activeStudent: null }),
-  saveAdd: async (data) => {
-    set({ isLoading: true });
-    try {
-      const response = await studentService.createStudent(data);
-      if (response.success) {
-        await get().fetchStudents(); 
-        set({ formMode: null, activeStudent: null }); 
-        showSuccessToast("Success", "Student added successfully");
-      }
-    } catch (err) {
-      showErrorToast("Error", "Failed to add student");
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  handleEdit: (student) => set({ formMode: 'EDIT', activeStudent: student }),
-  closeEdit: () => set({ formMode: null, activeStudent: null }),
-  saveEdit: async (data) => {
-    const { activeStudent, formMode, fetchStudents } = get();
-    if (formMode === 'EDIT' && activeStudent && 'id' in activeStudent) {
-      set({ isLoading: true });
-      try {
-        const response = await studentService.updateStudent(activeStudent.id, data);
-        if (response.success) {
-          await fetchStudents();
-          set({ formMode: null, activeStudent: null });
-          showSuccessToast("Success", "Student updated successfully");
-        }
-      } catch (err) {
-        showErrorToast("Error", "Failed to update student");
-      } finally {
-        set({ isLoading: false });
-      }
-    }
-  },
+  handleView: (student) => set({ viewingStudentId: student.id }),
+  closeView: () => set({ viewingStudentId: null }),
 
   handleDelete: (student) => set({ deletingStudent: student }),
   closeDelete: () => set({ deletingStudent: null }),

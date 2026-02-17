@@ -2,45 +2,42 @@ import { Box, Text, VStack, Input, FieldRoot, FieldLabel, Center, Spinner } from
 import { useTeacherListing } from "../../hooks/useTeacherListing"
 import { ListingPage } from "../../components/common/ListingPage"
 import type { Column } from "../../components/common/ListingPage"
-import { useForm, type UseFormRegister, type FieldErrors } from "react-hook-form"
-import { useEffect } from "react"
+import { type UseFormRegister, type FieldErrors } from "react-hook-form"
 import type { Teacher as ApiTeacher, CreateTeacherInput } from "../../api/types"
-
-type TeacherFormValues = CreateTeacherInput
+import { TeacherEditModal } from "./TeacherEditModal"
+import { TeacherViewModal } from "./TeacherViewModal"
 
 const columns: Column<ApiTeacher>[] = [
   { key: "name", label: "Name" },
   { key: "email", label: "Email" },
   { key: "phone", label: "Phone" },
-  { key: "password", label: "Password" },
   { key: "actions", label: "Actions" },
 ]
 
 interface TeacherFormProps {
-  register: UseFormRegister<TeacherFormValues>
-  errors: FieldErrors<TeacherFormValues>
+  register: UseFormRegister<CreateTeacherInput>
+  errors: FieldErrors<CreateTeacherInput>
 }
 
-const TeacherForm = ({ register, errors }: TeacherFormProps) => (
+export const TeacherForm = ({ register, errors }: TeacherFormProps) => (
   <>
     <FieldRoot invalid={!!errors.name}>
       <FieldLabel>
         Name <Text as="span" color="red.500">*</Text>
       </FieldLabel>
       <Input
-        {...register("name", { 
-          required: "Name is required"
-        })}
+        {...register("name", { required: "Name is required" })}
         placeholder="Enter name"
       />
       {errors.name && <Text color="red.500" fontSize="xs">{errors.name.message}</Text>}
     </FieldRoot>
+
     <FieldRoot invalid={!!errors.email}>
       <FieldLabel>
         Email <Text as="span" color="red.500">*</Text>
       </FieldLabel>
       <Input
-        {...register("email", { 
+        {...register("email", {
           required: "Email is required",
           pattern: {
             value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -51,12 +48,13 @@ const TeacherForm = ({ register, errors }: TeacherFormProps) => (
       />
       {errors.email && <Text color="red.500" fontSize="xs">{errors.email.message}</Text>}
     </FieldRoot>
+
     <FieldRoot invalid={!!errors.phone}>
       <FieldLabel>
         Phone <Text as="span" color="red.500">*</Text>
       </FieldLabel>
       <Input
-        {...register("phone", { 
+        {...register("phone", {
           required: "Phone is required",
           pattern: {
             value: /^\d{10}$/,
@@ -67,11 +65,13 @@ const TeacherForm = ({ register, errors }: TeacherFormProps) => (
       />
       {errors.phone && <Text color="red.500" fontSize="xs">{errors.phone.message}</Text>}
     </FieldRoot>
+
     <FieldRoot invalid={!!errors.password}>
       <FieldLabel>
         Password <Text as="span" color="red.500">*</Text>
       </FieldLabel>
       <Input
+        type="password"
         {...register("password", { required: "Password is required" })}
         placeholder="Enter password"
       />
@@ -85,20 +85,18 @@ function TeacherListingPage() {
     teachers,
     isLoading,
     error,
-    selectedTeacher,
-    formData,
+    viewingTeacherId,
+    formTeacherId,
     deletingTeacher,
+    fetchTeachers,
     handleView,
     handleEdit,
     handleDelete,
+    handleAdd,
     closeView,
     closeForm,
     closeDelete,
-    saveEdit,
     confirmDelete,
-
-    handleAdd,
-    saveAdd,
 
     // Pagination
     currentPage,
@@ -107,55 +105,6 @@ function TeacherListingPage() {
     pageSize,
     handlePageChange,
   } = useTeacherListing()
-
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<TeacherFormValues>()
-
-  const isEdit = !!(formData && "id" in formData)
-  const editingTeacher = isEdit ? (formData as ApiTeacher) : null
-  const addingTeacher = !isEdit && formData ? (formData as CreateTeacherInput) : null
-
-  useEffect(() => {
-    if (editingTeacher) {
-      const payload: CreateTeacherInput = {
-        name: editingTeacher.name,
-        email: editingTeacher.email,
-        phone: editingTeacher.phone,
-        password: editingTeacher.password,
-      }
-      reset(payload)
-    } else if (addingTeacher) {
-      reset({ name: "", email: "", phone: "", password: "" })
-    }
-  }, [editingTeacher, addingTeacher, reset])
-
-  const onFormSubmit = (data: TeacherFormValues) => {
-    if (editingTeacher) {
-      saveEdit(data)
-    } else {
-      saveAdd(data)
-    }
-  }
-
-  const renderViewDetails = (teacher: ApiTeacher) => (
-    <VStack align="start" gap={4}>
-      <Box>
-        <Text fontWeight="bold" color="gray.600" fontSize="sm">Name</Text>
-        <Text fontSize="md">{teacher.name}</Text>
-      </Box>
-      <Box>
-        <Text fontWeight="bold" color="gray.600" fontSize="sm">Email</Text>
-        <Text fontSize="md">{teacher.email}</Text>
-      </Box>
-      <Box>
-        <Text fontWeight="bold" color="gray.600" fontSize="sm">Phone</Text>
-        <Text fontSize="md">{teacher.phone}</Text>
-      </Box>
-      <Box>
-        <Text fontWeight="bold" color="gray.600" fontSize="sm">Password</Text>
-        <Text fontSize="md">{teacher.password}</Text>
-      </Box>
-    </VStack>
-  )
 
   if (isLoading && teachers.length === 0) {
     return (
@@ -173,40 +122,60 @@ function TeacherListingPage() {
     )
   }
 
+  const renderViewDetails = (teacher: ApiTeacher) => (
+    <VStack align="start" gap={4}>
+      <Box>
+        <Text fontWeight="bold" color="gray.600" fontSize="sm">Name</Text>
+        <Text fontSize="md">{teacher.name}</Text>
+      </Box>
+      <Box>
+        <Text fontWeight="bold" color="gray.600" fontSize="sm">Email</Text>
+        <Text fontSize="md">{teacher.email}</Text>
+      </Box>
+      <Box>
+        <Text fontWeight="bold" color="gray.600" fontSize="sm">Phone</Text>
+        <Text fontSize="md">{teacher.phone}</Text>
+      </Box>
+    </VStack>
+  )
+
   return (
-    <ListingPage
-      title="Teachers"
-      description="Manage teacher records"
-      addButtonText="Add Teacher"
-      columns={columns}
-      data={teachers}
-      selectedItem={selectedTeacher}
-      editingItem={editingTeacher}
-      deletingItem={deletingTeacher}
-      addingItem={addingTeacher}
-      onView={handleView}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-      onAdd={handleAdd}
-      onCloseView={closeView}
-      onCloseEdit={closeForm}
-      onCloseDelete={closeDelete}
-      onCloseAdd={closeForm}
-      onSubmit={() => handleSubmit(onFormSubmit)()}
-      onConfirmDelete={confirmDelete}
-      renderViewDetails={renderViewDetails}
-      renderFields={() => (
-        <TeacherForm 
-          register={register} 
-          errors={errors} 
-        />
-      )}
-      totalCount={totalCount}
-      currentPage={currentPage}
-      totalPages={totalPages}
-      pageSize={pageSize}
-      onPageChange={handlePageChange}
-    />
+    <>
+      <ListingPage
+        title="Teachers"
+        description="Manage teacher records"
+        addButtonText="Add Teacher"
+        columns={columns}
+        data={teachers}
+        deletingItem={deletingTeacher}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onAdd={handleAdd}
+        onCloseView={closeView}
+        onCloseDelete={closeDelete}
+        onConfirmDelete={confirmDelete}
+        renderViewDetails={renderViewDetails}
+        totalCount={totalCount}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+      />
+
+      <TeacherViewModal
+        teacherId={viewingTeacherId}
+        isOpen={!!viewingTeacherId}
+        onClose={closeView}
+      />
+
+      <TeacherEditModal
+        teacherId={formTeacherId}
+        isOpen={!!formTeacherId}
+        onClose={closeForm}
+        onSuccess={fetchTeachers}
+      />
+    </>
   )
 }
 

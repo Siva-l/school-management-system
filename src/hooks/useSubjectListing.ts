@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
-import { subjectService } from "../service/subjectService" 
-import type { Subject, CreateSubjectInput } from "../api/types" 
+import { subjectService } from "../service/subjectService"
+import type { Subject } from "../api/types"
 import { showErrorToast, showSuccessToast } from "../util/toast.util"
 
 export type { Subject } from "../api/types"
@@ -16,8 +16,8 @@ export const useSubjectListing = () => {
   const [totalCount, setTotalCount] = useState(0)
   const [pageSize] = useState(3)
   
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
-  const [formData, setFormData] = useState<Subject | CreateSubjectInput | null>(null)
+  const [viewingSubjectId, setViewingSubjectId] = useState<string | null>(null)
+  const [formSubjectId, setFormSubjectId] = useState<string | null>(null) // null for add, string for edit
   const [deletingSubject, setDeletingSubject] = useState<Subject | null>(null)
 
   const fetchSubjects = useCallback(async (page: number = currentPage) => {
@@ -43,37 +43,16 @@ export const useSubjectListing = () => {
     fetchSubjects()
   }, [])
 
-  const handleView = (subject: Subject) => setSelectedSubject(subject)
-  const handleEdit = (subject: Subject) => setFormData(subject)
-  const handleDelete = (subject: Subject) => setDeletingSubject(subject)
-  const handleAdd = () => setFormData({
-    name: "",
-    code: "",
-  })
-
-  const closeView = () => setSelectedSubject(null)
-  const closeForm = () => setFormData(null)
-  const closeDelete = () => setDeletingSubject(null)
-
-
-
-  const saveEdit = async (data: CreateSubjectInput) => {
-    if (formData && 'id' in formData) {
-      setIsLoading(true)
-      try {
-        const response = await subjectService.updateSubject(formData.id, data)
-        if (response.success) {
-          await fetchSubjects()
-          closeForm()
-          showSuccessToast("Success", "Subject updated successfully")
-        }
-      } catch (err) {
-        showErrorToast("Error", "Failed to update subject")
-      } finally {
-        setIsLoading(false)
-      }
-    }
+  const handleView = (subject: Subject) => {
+    setViewingSubjectId(subject.id)
   }
+  const handleEdit = (subject: Subject) => setFormSubjectId(subject.id)
+  const handleDelete = (subject: Subject) => setDeletingSubject(subject)
+  const handleAdd = () => setFormSubjectId('new')
+
+  const closeView = () => setViewingSubjectId(null)
+  const closeForm = () => setFormSubjectId(null)
+  const closeDelete = () => setDeletingSubject(null)
 
   const confirmDelete = async () => {
     if (deletingSubject && deletingSubject.id) {
@@ -95,28 +74,6 @@ export const useSubjectListing = () => {
     }
   }
 
-
-
-  const saveAdd = async (data: CreateSubjectInput) => {
-    if (formData && !('id' in formData)) {
-      setIsLoading(true)
-      try {
-        const response = await subjectService.createSubject(data)
-        if (response.success) {
-          await fetchSubjects()
-          closeForm()
-          showSuccessToast("Success", "Subject added successfully")
-        } else {
-          showErrorToast("Error", "Failed to add subject")
-        }
-      } catch (err) {
-        showErrorToast("Error", "Failed to add subject")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-  }
-
   const handlePageChange = (page?: number) => {
     if (page) {
       fetchSubjects(page)
@@ -127,21 +84,18 @@ export const useSubjectListing = () => {
     subjects,
     isLoading,
     error,
-    selectedSubject,
-    formData,
+    viewingSubjectId,
+    formSubjectId,
     deletingSubject,
+    fetchSubjects,
     handleView,
     handleEdit,
     handleDelete,
+    handleAdd,
     closeView,
     closeForm,
     closeDelete,
-    saveEdit,
     confirmDelete,
-
-    handleAdd,
-    saveAdd,
-    refreshSubjects: fetchSubjects,
 
     // Pagination
     currentPage,
