@@ -5,7 +5,7 @@ import type { Column } from "../../components/common/ListingPage"
 import { type UseFormRegister, type FieldErrors } from "react-hook-form"
 import { useEffect } from "react"
 import type { Student as ApiStudent, CreateStudentInput } from "../../api/types"
-import { StudentEditModal } from "./StudentEditModal"
+import { StudentFormModal } from "./StudentFormModal"
 import { StudentViewModal } from "./StudentViewModal"
 
 type StudentFormValues = CreateStudentInput
@@ -207,8 +207,8 @@ function StudentListingPage() {
         onClose={closeView}
       />
 
-      <StudentEditModal
-        studentId={formStudentId}
+      <StudentFormModal
+        studentId={formStudentId === 'new' ? null : formStudentId}
         isOpen={!!formStudentId}
         onClose={closeForm}
         onSuccess={fetchStudents}
