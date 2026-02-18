@@ -25,6 +25,7 @@ import { FiPlus, FiEye, FiEdit2, FiTrash2, FiX } from "react-icons/fi"
 import { AppButton } from "./AppButton"
 import { useEffect, type ReactNode } from "react"
 import PaginationRange from "../../pagination/pagination"
+import { NoData } from "./NoData"
 
 export interface Column<T> {
   key: keyof T | "actions"
@@ -110,59 +111,69 @@ export function ListingPage<T extends { id: number | string }>({
               </TableRow>
             </TableHeader>
 
-            <TableBody>
-              {data.map((item) => (
-                <TableRow key={item.id}>
-                  {columns.map((col) => {
-                    if (col.key === "actions") {
+            {data.length > 0 ? (
+              <TableBody>
+                {data.map((item) => (
+                  <TableRow key={item.id}>
+                    {columns.map((col) => {
+                      if (col.key === "actions") {
+                        return (
+                          <TableCell key="actions">
+                            <Flex gap={2}>
+                              <IconButton
+                                aria-label="View"
+                                size="sm"
+                                variant="ghost"
+                                _hover={{ bg: "blue.50" }}
+                                color="blue.600"
+                                onClick={() => onView(item)}
+                              >
+                                <FiEye />
+                              </IconButton>
+
+                              <IconButton
+                                aria-label="Edit"
+                                size="sm"
+                                _hover={{ bg: "green.50" }}
+                                variant="ghost"
+                                color="green.600"
+                                onClick={() => onEdit(item)}
+                              >
+                                <FiEdit2 />
+                              </IconButton>
+
+                              <IconButton
+                                aria-label="Delete"
+                                size="sm"
+                                _hover={{ bg: "red.50" }}
+                                variant="ghost"
+                                color="red.600"
+                                onClick={() => onDelete(item)}
+                              >
+                                <FiTrash2 />
+                              </IconButton>
+                            </Flex>
+                          </TableCell>
+                        )
+                      }
                       return (
-                        <TableCell key="actions">
-                          <Flex gap={2}>
-                            <IconButton
-                              aria-label="View"
-                              size="sm"
-                              variant="ghost"
-                              _hover={{ bg: "blue.50" }}
-                              color="blue.600"
-                              onClick={() => onView(item)}
-                            >
-                              <FiEye />
-                            </IconButton>
-
-                            <IconButton
-                              aria-label="Edit"
-                              size="sm"
-                              _hover={{ bg: "green.50" }}
-                              variant="ghost"
-                              color="green.600"
-                              onClick={() => onEdit(item)}
-                            >
-                              <FiEdit2 />
-                            </IconButton>
-
-                            <IconButton
-                              aria-label="Delete"
-                              size="sm"
-                              _hover={{ bg: "red.50" }}
-                              variant="ghost"
-                              color="red.600"
-                              onClick={() => onDelete(item)}
-                            >
-                              <FiTrash2 />
-                            </IconButton>
-                          </Flex>
+                        <TableCell key={col.key as string} fontSize="sm" color="gray.600">
+                          {(item[col.key as keyof T] as any)?.toString()}
                         </TableCell>
                       )
-                    }
-                    return (
-                      <TableCell key={col.key as string} fontSize="sm" color="gray.600">
-                        {(item[col.key as keyof T] as any)?.toString()}
-                      </TableCell>
-                    )
-                  })}
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            ):(
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={columns.length} p={0}>
+                    <NoData message={`No ${title.toLowerCase()} found`} />
+                  </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
+              </TableBody>
+            )}
           </TableRoot>
         </Box>
         
