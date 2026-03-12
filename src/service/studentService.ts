@@ -1,5 +1,5 @@
 import apiClient from '../api/apiClient';
-import type { ApiResponse, Student, CreateStudentInput } from '../api/types';
+import type { ApiResponse, Student } from '../api/types';
 
 
 export const studentService = {
@@ -15,16 +15,22 @@ export const studentService = {
   },
 
  
-  createStudent: async (studentData: CreateStudentInput): Promise<ApiResponse<Student>> => {
-    const response = await apiClient.post<ApiResponse<Student>>('/students/create', studentData);
+  createStudent: async (studentData: FormData): Promise<ApiResponse<Student>> => {
+    const response = await apiClient.post<ApiResponse<Student>>('/students/create', studentData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
  
-  updateStudent: async (id: string, studentData: Partial<CreateStudentInput>): Promise<ApiResponse<Student>> => {
-    const { name, admissionNo, dob, gender, phone } = studentData;
-    const cleanData = { name, admissionNo, dob, gender, phone };
-    const response = await apiClient.put<ApiResponse<Student>>(`/students/${id}`, cleanData);
+  updateStudent: async (id: string, studentData: FormData): Promise<ApiResponse<Student>> => {
+    const response = await apiClient.put<ApiResponse<Student>>(`/students/${id}`, studentData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
