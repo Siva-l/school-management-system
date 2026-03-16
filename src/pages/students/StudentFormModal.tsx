@@ -33,12 +33,15 @@ interface StudentFormModalProps {
 export function StudentFormModal({ studentId, isOpen, onClose, onSuccess }: StudentFormModalProps) {
   const [isFetching, setIsFetching] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const isEditMode = !!studentId
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateStudentInput>()
 
   // Fetch data when editing
   useEffect(() => {
+    setSelectedFile(null)
     if (isOpen && studentId) {
       setIsFetching(true)
       studentService.getStudentById(studentId)
@@ -52,6 +55,7 @@ export function StudentFormModal({ studentId, isOpen, onClose, onSuccess }: Stud
               dob: student.dob,
               phone: student.phone,
             })
+            setImageUrl(student.imageUrl)
           }
         })
         .catch(() => {
@@ -70,15 +74,27 @@ export function StudentFormModal({ studentId, isOpen, onClose, onSuccess }: Stud
         dob: "",
         phone: "",
       })
+      setImageUrl(null)
     }
   }, [isOpen, studentId, reset, onClose])
 
   const onSubmit = async (data: CreateStudentInput) => {
     setIsSubmitting(true)
     try {
+      const formData = new FormData()
+      Object.entries(data).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          formData.append(key, value as string)
+        }
+      })
+      
+      if (selectedFile) {
+        formData.append("file", selectedFile)
+      }
+
       if (isEditMode) {
         // Update existing student
-        const response = await studentService.updateStudent(studentId, data)
+        const response = await studentService.updateStudent(studentId, formData)
         if (response.success) {
           showSuccessToast("Success", "Student updated successfully")
           onSuccess()
@@ -86,7 +102,7 @@ export function StudentFormModal({ studentId, isOpen, onClose, onSuccess }: Stud
         }
       } else {
         // Create new student
-        const response = await studentService.createStudent(data)
+        const response = await studentService.createStudent(formData)
         if (response.success) {
           showSuccessToast("Success", "Student created successfully")
           onSuccess()
@@ -121,7 +137,7 @@ export function StudentFormModal({ studentId, isOpen, onClose, onSuccess }: Stud
             ) : (
               <form id="student-form" onSubmit={handleSubmit(onSubmit)}>
                 <Stack gap={4}>
-                  <StudentForm register={register} errors={errors} />
+                  <StudentForm register={register} errors={errors} imageUrl={imageUrl} onFileSelect={setSelectedFile} />
                 </Stack>
               </form>
             )}

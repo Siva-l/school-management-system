@@ -30,6 +30,7 @@ import { NoData } from "./NoData"
 export interface Column<T> {
   key: keyof T | "actions"
   label: string
+  render?: (item: T) => ReactNode
 }
 
 interface ListingPageProps<T> {
@@ -153,6 +154,13 @@ export function ListingPage<T extends { id: number | string }>({
                                 <FiTrash2 />
                               </IconButton>
                             </Flex>
+                          </TableCell>
+                        )
+                      }
+                      if (col.render) {
+                        return (
+                          <TableCell key={col.key as string} fontSize="sm" color="gray.600">
+                            {col.render(item)}
                           </TableCell>
                         )
                       }
