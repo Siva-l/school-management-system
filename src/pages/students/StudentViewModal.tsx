@@ -21,6 +21,8 @@ import { useEffect, useState } from "react"
 import { studentService } from "../../service/studentService"
 import { showErrorToast } from "../../util/toast.util"
 import type { Student } from "../../api/types"
+import { getImageUrl } from "../../util/image.util"
+import { Box } from "@chakra-ui/react"
 
 interface StudentViewModalProps {
   studentId: string | null
@@ -74,6 +76,21 @@ export function StudentViewModal({ studentId, isOpen, onClose }: StudentViewModa
               </Center>
             ) : student ? (
               <Stack gap={3}>
+                <Stack gap={1} align="center" mb={4}>
+                  <Box w="100px" h="100px" borderRadius="full" overflow="hidden" border="2px solid" borderColor="gray.200">
+                    {student.imageUrl ? (
+                      <img 
+                        src={getImageUrl(student.imageUrl)} 
+                        alt={student.name} 
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                      />
+                    ) : (
+                      <Center h="100%" bg="gray.100">
+                        <Text color="gray.400" fontSize="sm">No Image</Text>
+                      </Center>
+                    )}
+                  </Box>
+                </Stack>
                 <Stack gap={1}>
                   <Text fontWeight="semibold" fontSize="sm" color="gray.600">Name</Text>
                   <Text>{student.name}</Text>

@@ -25,9 +25,10 @@ export function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const currentPage = location.pathname.slice(1) || "students"
+  const currentPage = location.pathname === "/" ? "" : location.pathname.slice(1)
 
   const menuItems = [
+    { id: "", label: "Dashboard", icon: <FiMenu /> },
     { id: "students", label: "Students", icon: <FiUsers /> },
     { id: "teachers", label: "Teachers", icon: <FiUsers /> },
     { id: "subjects", label: "Subjects", icon: <FiBook /> },
