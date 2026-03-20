@@ -14,7 +14,7 @@ export const useSubjectListing = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
-  const [pageSize] = useState(3)
+  const [pageSize] = useState(5)
   
   const [viewingSubjectId, setViewingSubjectId] = useState<string | null>(null)
   const [formSubjectId, setFormSubjectId] = useState<string | null>(null) // null for add, string for edit

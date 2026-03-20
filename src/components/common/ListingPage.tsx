@@ -30,6 +30,8 @@ import { NoData } from "./NoData"
 export interface Column<T> {
   key: keyof T | "actions"
   label: string
+  render?: (item: T) => ReactNode
+  sortable?: boolean
 }
 
 interface ListingPageProps<T> {
@@ -58,6 +60,14 @@ interface ListingPageProps<T> {
   totalPages?: number
   pageSize?: number
   onPageChange?: (page?: number) => void
+
+  // Sorting props
+  sortBy?: string | null
+  sortOrder?: 'asc' | 'desc'
+  onSort?: (key: keyof T | "actions") => void
+
+  // Additional Filter Actions
+  filterActions?: ReactNode
 }
 
 export function ListingPage<T extends { id: number | string }>({
@@ -81,31 +91,54 @@ export function ListingPage<T extends { id: number | string }>({
   totalPages,
   pageSize,
   onPageChange,
+  sortBy,
+  sortOrder,
+  onSort,
+  filterActions,
 }: ListingPageProps<T>) {
 
   useEffect(()=>{
   },[currentPage])
   return (
-    <Box p={8} minH="100vh">
+    <Box p={{ base: 4, md: 8 }} minH="100vh">
       <Box maxW="7xl" mx="auto">
-        <Flex justify="space-between" align="center" mb={6}>
+        <Flex 
+          direction={{ base: "column", sm: "row" }} 
+          justify="space-between" 
+          align={{ base: "stretch", sm: "center" }} 
+          gap={4} 
+          mb={6}
+        >
           <Box>
-            <Heading size="lg">{title}</Heading>
-            <Text color="gray.600">{description}</Text>
+            <Heading size={{ base: "md", md: "lg" }}>{title}</Heading>
+            <Text color="gray.600" fontSize={{ base: "sm", md: "md" }}>{description}</Text>
           </Box>
 
-          <AppButton bg={"blue.500"} size="md" color="white" onClick={onAdd}>
-            <FiPlus style={{ marginRight: "8px" }} /> {addButtonText}
-          </AppButton>
+          <Flex gap={3} align="center">
+            {filterActions}
+            <AppButton bg={"blue.500"} size={{ base: "sm", md: "md" }} color="white" onClick={onAdd}>
+              <FiPlus style={{ marginRight: "8px" }} /> {addButtonText}
+            </AppButton>
+          </Flex>
         </Flex>
 
-        <Box bg="white" borderRadius="lg" border="1px solid" borderColor="gray.100">
-          <TableRoot size="md" interactive>
+        <Box bg="white" borderRadius="lg" border="1px solid" borderColor="gray.100" overflowX="auto">
+          <TableRoot size={{ base: "sm", md: "md" }} interactive whiteSpace="nowrap">
             <TableHeader>
               <TableRow>
                 {columns.map((col) => (
-                  <TableColumnHeader key={col.key as string} bg="gray.100" color="gray.700">
-                    {col.label}
+                  <TableColumnHeader 
+                    key={col.key as string} 
+                    bg="gray.100" 
+                    color="gray.700"
+                    cursor={col.sortable ? "pointer" : "default"}
+                    onClick={() => {
+                      if (col.sortable && onSort) {
+                        onSort(col.key);
+                      }
+                    }}
+                  >
+                    {col.label} {col.sortable && sortBy === col.key ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
                   </TableColumnHeader>
                 ))}
               </TableRow>
@@ -153,6 +186,13 @@ export function ListingPage<T extends { id: number | string }>({
                                 <FiTrash2 />
                               </IconButton>
                             </Flex>
+                          </TableCell>
+                        )
+                      }
+                      if (col.render) {
+                        return (
+                          <TableCell key={col.key as string} fontSize="sm" color="gray.600">
+                            {col.render(item)}
                           </TableCell>
                         )
                       }

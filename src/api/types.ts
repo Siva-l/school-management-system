@@ -22,6 +22,7 @@ export interface Student {
   dob: string;
   gender: string;
   phone: string;
+  imageUrl:string;
 }
 
 export type CreateStudentInput = Omit<Student, 'id' | 'createdAt' | 'updatedAt'>;

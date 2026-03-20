@@ -1,10 +1,23 @@
 import apiClient from '../api/apiClient';
-import type { ApiResponse, Student, CreateStudentInput } from '../api/types';
+import type { ApiResponse, Student } from '../api/types';
 
 
 export const studentService = {
-  getAllStudents: async (page: number, size: number): Promise<ApiResponse<Student[]>> => {
-    const response = await apiClient.get<ApiResponse<Student[]>>(`/students?page=${page}&size=${size}`);
+  getAllStudents: async (
+    page: number, 
+    size: number,
+    sortBy?: string | null,
+    sortOrder?: 'asc' | 'desc',
+    gender?: string | null
+  ): Promise<ApiResponse<Student[]>> => {
+    let url = `/students?page=${page}&size=${size}`;
+    if (sortBy && sortOrder) {
+      url += `&sortBy=${sortBy}&sortOrder=${sortOrder.toUpperCase()}`;
+    }
+    if (gender) {
+      url += `&gender=${gender}`;
+    }
+    const response = await apiClient.get<ApiResponse<Student[]>>(url);
     return response.data;
   },
 
@@ -15,16 +28,22 @@ export const studentService = {
   },
 
  
-  createStudent: async (studentData: CreateStudentInput): Promise<ApiResponse<Student>> => {
-    const response = await apiClient.post<ApiResponse<Student>>('/students/create', studentData);
+  createStudent: async (studentData: FormData): Promise<ApiResponse<Student>> => {
+    const response = await apiClient.post<ApiResponse<Student>>('/students/create', studentData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
  
-  updateStudent: async (id: string, studentData: Partial<CreateStudentInput>): Promise<ApiResponse<Student>> => {
-    const { name, admissionNo, dob, gender, phone } = studentData;
-    const cleanData = { name, admissionNo, dob, gender, phone };
-    const response = await apiClient.put<ApiResponse<Student>>(`/students/${id}`, cleanData);
+  updateStudent: async (id: string, studentData: FormData): Promise<ApiResponse<Student>> => {
+    const response = await apiClient.put<ApiResponse<Student>>(`/students/${id}`, studentData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 

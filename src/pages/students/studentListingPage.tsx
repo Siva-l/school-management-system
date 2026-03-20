@@ -3,17 +3,32 @@ import { useStudentStore } from "../../store/student.store"
 import { ListingPage } from "../../components/common/ListingPage"
 import type { Column } from "../../components/common/ListingPage"
 import { type UseFormRegister, type FieldErrors } from "react-hook-form"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import type { Student as ApiStudent, CreateStudentInput } from "../../api/types"
 import { StudentFormModal } from "./StudentFormModal"
 import { StudentViewModal } from "./StudentViewModal"
+import { getImageUrl } from "../../util/image.util"
+import Dropzone from 'react-dropzone'
 
 type StudentFormValues = CreateStudentInput
 
 const columns: Column<ApiStudent>[] = [
-  { key: "name", label: "Name" },
-  { key: "admissionNo", label: "Admission No" },
-  { key: "gender", label: "Gender" },
+  { key: "name", label: "Name", sortable: true },
+  { 
+    key:"imageUrl",
+    label:"Profile Picture",
+    render: (student) => student.imageUrl ? (
+      <Box w="40px" h="40px" borderRadius="full" overflow="hidden" border="1px solid" borderColor="gray.200">
+        <img 
+          src={getImageUrl(student.imageUrl)} 
+          alt={student.name} 
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+        />
+      </Box>
+    ) : <Text color="gray.400" fontSize="sm">-</Text>
+  },
+  { key: "admissionNo", label: "Admission No", sortable: true },
+  { key: "gender", label: "Gender", sortable: true },
   { key: "dob", label: "Date of Birth" },
   { key: "phone", label: "Phone" },
   { key: "actions", label: "Actions" },
@@ -22,11 +37,16 @@ const columns: Column<ApiStudent>[] = [
 interface StudentFormProps {
   register: UseFormRegister<StudentFormValues>
   errors: FieldErrors<StudentFormValues>
+  imageUrl?: string | null
+  onFileSelect?: (file: File | null) => void
 }
 
-export const StudentForm = ({ register, errors }: StudentFormProps) => (
-  <>
-    <FieldRoot invalid={!!errors.name}>
+export const StudentForm = ({ register, errors, imageUrl, onFileSelect }: StudentFormProps) => {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  return (
+    <>
+      <FieldRoot invalid={!!errors.name}>
       <FieldLabel>
         Name <Text as="span" color="red.500">*</Text>
       </FieldLabel>
@@ -37,6 +57,45 @@ export const StudentForm = ({ register, errors }: StudentFormProps) => (
         placeholder="Enter name"
       />
       {errors.name && <Text color="red.500" fontSize="xs">{errors.name.message}</Text>}
+    </FieldRoot>
+    <FieldRoot>
+      <FieldLabel>Profile Picture</FieldLabel>
+      <Dropzone onDrop={acceptedFiles => {
+    
+        if (acceptedFiles.length > 0) {
+          setPreviewImage(URL.createObjectURL(acceptedFiles[0]));
+          if (onFileSelect) onFileSelect(acceptedFiles[0]);
+        }
+      }}>
+        {({getRootProps, getInputProps}) => ( 
+          <Box
+            {...getRootProps()}
+            p={6}
+            border="2px dashed"
+            borderColor="gray.300"
+            borderRadius="md"
+            textAlign="center"
+            cursor="pointer"
+            _hover={{ borderColor: "blue.500", bg: "gray.50" }}
+            transition="all 0.2s"
+          >
+            <input {...getInputProps()} />
+            {previewImage || imageUrl ? (
+              <VStack gap={3}>
+                <Box w="120px" h="120px" borderRadius="full" overflow="hidden" border="2px solid" borderColor="gray.200" mx="auto">
+                  <img src={previewImage || getImageUrl(imageUrl ?? undefined)} alt={imageUrl || "Profile Picture"} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                </Box>
+                <Text fontSize="sm" color="blue.500" fontWeight="medium">Click or drag to change image</Text>
+              </VStack>
+            ) : (
+              <VStack gap={2}>
+                <Text fontWeight="medium" color="gray.600">Click to upload or drag and drop</Text>
+                <Text fontSize="xs" color="gray.500">SVG, PNG, JPG or GIF</Text>
+              </VStack>
+            )}
+          </Box>
+        )}
+      </Dropzone>
     </FieldRoot>
     <FieldRoot invalid={!!errors.admissionNo}>
       <FieldLabel>
@@ -100,7 +159,8 @@ export const StudentForm = ({ register, errors }: StudentFormProps) => (
       {errors.phone && <Text color="red.500" fontSize="xs">{errors.phone.message}</Text>}
     </FieldRoot>
   </>
-)
+  )
+}
 
 function StudentListingPage() {
   const {
@@ -126,7 +186,20 @@ function StudentListingPage() {
     totalCount,
     pageSize,
     handlePageChange,
+    sortBy,
+    sortOrder,
+    setSort,
+    genderFilter,
+    setGenderFilter,
   } = useStudentStore()
+
+  const handleSort = (key: any) => {
+    if (sortBy === key) {
+      setSort(key, sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSort(key, 'asc')
+    }
+  }
 
   useEffect(() => {
     fetchStudents()
@@ -141,6 +214,20 @@ function StudentListingPage() {
       <Box>
         <Text fontWeight="bold" color="gray.600" fontSize="sm">Name</Text>
         <Text fontSize="md">{student.name}</Text>
+      </Box>
+      <Box>
+        <Text fontWeight="bold" color="gray.600" fontSize="sm">Profile Picture</Text>
+        {student.imageUrl ? (
+          <Box w="80px" h="80px" mt={2} borderRadius="md" overflow="hidden" border="1px solid" borderColor="gray.200">
+            <img 
+              src={getImageUrl(student.imageUrl)} 
+              alt={student.name} 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
+          </Box>
+        ) : (
+          <Text fontSize="md" color="gray.400">No Image</Text>
+        )}
       </Box>
       <Box>
         <Text fontWeight="bold" color="gray.600" fontSize="sm">Admission No</Text>
@@ -169,13 +256,19 @@ function StudentListingPage() {
     )
   }
 
-  if (error) {
-    return (
-      <Center h="400px">
-        <Text color="red.500">{error}</Text>
-      </Center>
-    )
-  }
+  const filterActions = (
+    <NativeSelect.Root size="md" width="150px">
+      <NativeSelect.Field 
+        value={genderFilter || ""} 
+        onChange={(e) => setGenderFilter(e.target.value || null)}
+      >
+        <option value="">All Genders</option>
+        <option value="MALE">Male</option>
+        <option value="FEMALE">Female</option>
+      </NativeSelect.Field>
+      <NativeSelect.Indicator />
+    </NativeSelect.Root>
+  )
 
   return (
     <>
@@ -185,6 +278,10 @@ function StudentListingPage() {
         addButtonText="Add Student"
         columns={columns}
         data={students}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSort={handleSort}
+        filterActions={filterActions}
         deletingItem={deletingStudent}
         onView={handleView}
         onEdit={handleEdit}

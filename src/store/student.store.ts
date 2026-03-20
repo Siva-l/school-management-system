@@ -15,6 +15,14 @@ interface StudentState {
   totalCount: number;
   pageSize: number;
 
+  // Sorting
+  sortBy: string | null;
+  sortOrder: 'asc' | 'desc';
+  setSort: (sortBy: string | null, sortOrder: 'asc' | 'desc') => void;
+
+  genderFilter: string | null;
+  setGenderFilter: (gender: string | null) => void;
+
   // Selected Items for Modals
   viewingStudentId: string | null;
   formStudentId: string | null; // null for add, string for edit
@@ -51,7 +59,14 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   currentPage: 1,
   totalPages: 0,
   totalCount: 0,
-  pageSize: 3,
+  pageSize: 5,
+
+  // Sorting State
+  sortBy: null,
+  sortOrder: 'asc',
+
+  // Filters State
+  genderFilter: null,
 
   // Selected Items State
   viewingStudentId: null,
@@ -61,8 +76,8 @@ export const useStudentStore = create<StudentState>((set, get) => ({
   fetchStudents: async (page = get().currentPage) => {
     set({ isLoading: true, error: null });
     try {
-      const { pageSize } = get();
-      const response = await studentService.getAllStudents(page, pageSize);
+      const { pageSize, sortBy, sortOrder, genderFilter } = get();
+      const response = await studentService.getAllStudents(page, pageSize, sortBy, sortOrder, genderFilter);
       if (response.success && response.data) {
         set({
           students: response.data.results || [],
@@ -114,5 +129,15 @@ export const useStudentStore = create<StudentState>((set, get) => ({
 
   handlePageChange: (page) => {
     get().fetchStudents(page);
+  },
+
+  setSort: (sortBy, sortOrder) => {
+    set({ sortBy, sortOrder, currentPage: 1 });
+    get().fetchStudents(1);
+  },
+
+  setGenderFilter: (gender) => {
+    set({ genderFilter: gender, currentPage: 1 });
+    get().fetchStudents(1);
   }
 }));
