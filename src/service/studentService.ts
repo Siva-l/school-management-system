@@ -3,8 +3,21 @@ import type { ApiResponse, Student } from '../api/types';
 
 
 export const studentService = {
-  getAllStudents: async (page: number, size: number): Promise<ApiResponse<Student[]>> => {
-    const response = await apiClient.get<ApiResponse<Student[]>>(`/students?page=${page}&size=${size}`);
+  getAllStudents: async (
+    page: number, 
+    size: number,
+    sortBy?: string | null,
+    sortOrder?: 'asc' | 'desc',
+    gender?: string | null
+  ): Promise<ApiResponse<Student[]>> => {
+    let url = `/students?page=${page}&size=${size}`;
+    if (sortBy && sortOrder) {
+      url += `&sortBy=${sortBy}&sortOrder=${sortOrder.toUpperCase()}`;
+    }
+    if (gender) {
+      url += `&gender=${gender}`;
+    }
+    const response = await apiClient.get<ApiResponse<Student[]>>(url);
     return response.data;
   },
 

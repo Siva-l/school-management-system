@@ -14,7 +14,7 @@ export const useTeacherListing = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
-  const [pageSize] = useState(3)
+  const [pageSize] = useState(5)
   
   const [viewingTeacherId, setViewingTeacherId] = useState<string | null>(null)
   const [formTeacherId, setFormTeacherId] = useState<string | null>(null) // null for add, string for edit

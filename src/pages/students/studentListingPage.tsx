@@ -13,7 +13,7 @@ import Dropzone from 'react-dropzone'
 type StudentFormValues = CreateStudentInput
 
 const columns: Column<ApiStudent>[] = [
-  { key: "name", label: "Name" },
+  { key: "name", label: "Name", sortable: true },
   { 
     key:"imageUrl",
     label:"Profile Picture",
@@ -27,8 +27,8 @@ const columns: Column<ApiStudent>[] = [
       </Box>
     ) : <Text color="gray.400" fontSize="sm">-</Text>
   },
-  { key: "admissionNo", label: "Admission No" },
-  { key: "gender", label: "Gender" },
+  { key: "admissionNo", label: "Admission No", sortable: true },
+  { key: "gender", label: "Gender", sortable: true },
   { key: "dob", label: "Date of Birth" },
   { key: "phone", label: "Phone" },
   { key: "actions", label: "Actions" },
@@ -186,7 +186,20 @@ function StudentListingPage() {
     totalCount,
     pageSize,
     handlePageChange,
+    sortBy,
+    sortOrder,
+    setSort,
+    genderFilter,
+    setGenderFilter,
   } = useStudentStore()
+
+  const handleSort = (key: any) => {
+    if (sortBy === key) {
+      setSort(key, sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSort(key, 'asc')
+    }
+  }
 
   useEffect(() => {
     fetchStudents()
@@ -243,13 +256,19 @@ function StudentListingPage() {
     )
   }
 
-  if (error) {
-    return (
-      <Center h="400px">
-        <Text color="red.500">{error}</Text>
-      </Center>
-    )
-  }
+  const filterActions = (
+    <NativeSelect.Root size="md" width="150px">
+      <NativeSelect.Field 
+        value={genderFilter || ""} 
+        onChange={(e) => setGenderFilter(e.target.value || null)}
+      >
+        <option value="">All Genders</option>
+        <option value="MALE">Male</option>
+        <option value="FEMALE">Female</option>
+      </NativeSelect.Field>
+      <NativeSelect.Indicator />
+    </NativeSelect.Root>
+  )
 
   return (
     <>
@@ -259,6 +278,10 @@ function StudentListingPage() {
         addButtonText="Add Student"
         columns={columns}
         data={students}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSort={handleSort}
+        filterActions={filterActions}
         deletingItem={deletingStudent}
         onView={handleView}
         onEdit={handleEdit}
